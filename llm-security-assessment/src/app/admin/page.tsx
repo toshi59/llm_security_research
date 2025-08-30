@@ -18,12 +18,66 @@ export default function AdminPage() {
   const [investigating, setInvestigating] = useState(false);
   const [progress, setProgress] = useState('');
   const [progressValue, setProgressValue] = useState(0);
+  const [progressSteps, setProgressSteps] = useState<{
+    step: string;
+    status: 'pending' | 'active' | 'completed' | 'error';
+    message: string;
+  }[]>([]);
   const [result, setResult] = useState<any>(null);
   const [recentAssessments, setRecentAssessments] = useState<any[]>([]);
+  const [cleaning, setCleaning] = useState(false);
 
   const handleLogout = async () => {
     await fetch('/api/logout', { method: 'POST' });
     router.push('/login');
+  };
+
+  // 進捗ステップを管理するヘルパー関数
+  const updateProgressStep = (stepIndex: number, status: 'pending' | 'active' | 'completed' | 'error', message?: string) => {
+    setProgressSteps(prev => prev.map((step, index) => 
+      index === stepIndex 
+        ? { ...step, status, ...(message && { message }) }
+        : step
+    ));
+  };
+
+  const initializeProgressSteps = () => {
+    const steps = [
+      { step: '初期化', status: 'pending' as const, message: 'アセスメントを初期化しています...' },
+      { step: '情報収集', status: 'pending' as const, message: 'Tavilyで情報を収集中...' },
+      { step: 'モデル作成', status: 'pending' as const, message: 'モデル情報を作成中...' },
+      { step: 'セキュリティ項目取得', status: 'pending' as const, message: 'セキュリティ項目を取得中...' },
+      { step: 'アセスメント実行', status: 'pending' as const, message: 'AIによるアセスメントを実行中...' },
+      { step: 'データ保存', status: 'pending' as const, message: 'アセスメント結果を保存中...' },
+      { step: '完了', status: 'pending' as const, message: 'アセスメント完了！' }
+    ];
+    setProgressSteps(steps);
+    return steps;
+  };
+
+  const handleCleanupOldAssessments = async () => {
+    if (!confirm('古いアセスメント結果を削除しますか？この操作は元に戻せません。')) {
+      return;
+    }
+
+    setCleaning(true);
+    try {
+      const response = await fetch('/api/assessments/cleanup', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`${result.message}\n残りモデル数: ${result.remainingModels}`);
+      } else {
+        alert('削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error cleaning up assessments:', error);
+      alert('削除中にエラーが発生しました');
+    } finally {
+      setCleaning(false);
+    }
   };
 
   const handleInvestigate = async () => {
@@ -33,11 +87,24 @@ export default function AdminPage() {
     }
 
     setInvestigating(true);
-    setProgress('調査を開始しています...');
     setResult(null);
+    setProgressValue(0);
 
+    // 進捗ステップを初期化
+    const steps = initializeProgressSteps();
+    
     try {
+      // ステップ1: 初期化
+      updateProgressStep(0, 'active');
+      setProgress('アセスメントを初期化しています...');
+      setProgressValue(5);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      updateProgressStep(0, 'completed');
+
+      // ステップ2: 情報収集開始
+      updateProgressStep(1, 'active');
       setProgress('Tavilyで情報を収集中...');
+      setProgressValue(15);
       
       const response = await fetch('/api/admin/investigate', {
         method: 'POST',
@@ -48,15 +115,35 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
+        updateProgressStep(1, 'completed');
+        updateProgressStep(2, 'completed');
+        updateProgressStep(3, 'completed');
+        updateProgressStep(4, 'completed');
+        updateProgressStep(5, 'completed');
+        
+        setProgress('結果を処理中...');
+        setProgressValue(85);
+        
         const data = await response.json();
+        
+        updateProgressStep(6, 'completed');
         setResult(data);
-        setProgress('調査完了！');
+        setProgress('アセスメント完了！');
+        setProgressValue(100);
       } else {
-        setProgress('調査中にエラーが発生しました');
+        const currentActiveIndex = steps.findIndex(step => step.status === 'active' || step.status === 'pending');
+        if (currentActiveIndex !== -1) {
+          updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
+        }
+        setProgress('アセスメント中にエラーが発生しました');
       }
     } catch (error) {
       console.error('Investigation error:', error);
-      setProgress('調査中にエラーが発生しました');
+      const currentActiveIndex = steps.findIndex(step => step.status === 'active' || step.status === 'pending');
+      if (currentActiveIndex !== -1) {
+        updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
+      }
+      setProgress('アセスメント中にエラーが発生しました');
     } finally {
       setInvestigating(false);
     }
@@ -97,45 +184,55 @@ export default function AdminPage() {
 
   return (
     <PageLayout
-      title="管理画面"
-      description="モデル調査と管理"
+      title="生成AIモデルアセスメント"
+      description="生成AIモデルのセキュリティアセスメント実施・管理"
       breadcrumbs={[
         { label: 'ホーム', href: '/', icon: <Home className="h-3 w-3" /> },
-        { label: '管理画面' }
+        { label: '生成AIモデルアセスメント' }
       ]}
     >
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div></div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            ログアウト
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleCleanupOldAssessments}
+              disabled={cleaning}
+            >
+              {cleaning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
+              {cleaning ? '削除中...' : '古いアセスメント削除'}
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              ログアウト
+            </Button>
+          </div>
         </div>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>LLMモデル調査</CardTitle>
+            <CardTitle>生成AIモデルアセスメント</CardTitle>
             <CardDescription>
-              モデル名を入力して、セキュリティ評価の自動調査を実行します
+              生成AIモデル名を入力して、包括的なセキュリティアセスメントを自動実行します
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">モデル名 *</label>
+                  <label className="block text-sm font-medium mb-2">生成AIモデル名 *</label>
                   <Input
-                    placeholder="例: GPT-5 Enterprise"
+                    placeholder="例: GPT-5, Claude-3.5, Gemini-2.0"
                     value={modelName}
                     onChange={(e) => setModelName(e.target.value)}
                     disabled={investigating}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">ベンダー</label>
+                  <label className="block text-sm font-medium mb-2">開発会社・ベンダー</label>
                   <Input
-                    placeholder="例: OpenAI"
+                    placeholder="例: OpenAI, Anthropic, Google"
                     value={vendor}
                     onChange={(e) => setVendor(e.target.value)}
                     disabled={investigating}
@@ -151,17 +248,56 @@ export default function AdminPage() {
                 {investigating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    調査中...
+                    アセスメント実行中...
                   </>
                 ) : (
                   <>
                     <Search className="w-4 h-4 mr-2" />
-                    調査を実行
+                    アセスメント実行
                   </>
                 )}
               </Button>
               
-              {progress && (
+              {investigating && progressSteps.length > 0 && (
+                <div className="space-y-4">
+                  {/* プログレスバー */}
+                  <div className="w-full">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gray-600">進捗状況</span>
+                      <span className="font-medium">{progressValue}%</span>
+                    </div>
+                    <Progress value={progressValue} className="w-full h-3" />
+                  </div>
+
+                  {/* 詳細ステップ */}
+                  <div className="space-y-2">
+                    {progressSteps.map((step, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-shrink-0">
+                          {step.status === 'completed' && (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          )}
+                          {step.status === 'active' && (
+                            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                          )}
+                          {step.status === 'error' && (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                          )}
+                          {step.status === 'pending' && (
+                            <div className="h-5 w-5 rounded-full bg-gray-300" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">{step.step}</div>
+                          <div className="text-xs text-gray-500">{step.message}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {progress && !investigating && (
                 <div className="text-sm text-muted-foreground text-center">
                   {progress}
                 </div>

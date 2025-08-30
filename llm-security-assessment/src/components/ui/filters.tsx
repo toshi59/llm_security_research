@@ -139,7 +139,7 @@ export function Filters({
                     {group.options.map((option) => (
                       <label
                         key={option.value}
-                        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md p-2 -m-2"
+                        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-md p-2 -m-2"
                       >
                         <input
                           type="checkbox"
@@ -165,7 +165,7 @@ export function Filters({
                 ) : (
                   // シングルセレクト
                   <div className="space-y-1">
-                    <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md p-2 -m-2">
+                    <label className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-md p-2 -m-2">
                       <input
                         type="radio"
                         name={group.key}
@@ -180,7 +180,7 @@ export function Filters({
                     {group.options.map((option) => (
                       <label
                         key={option.value}
-                        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md p-2 -m-2"
+                        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-md p-2 -m-2"
                       >
                         <input
                           type="radio"

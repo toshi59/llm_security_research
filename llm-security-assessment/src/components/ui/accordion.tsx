@@ -38,7 +38,7 @@ export function Accordion({ children, className }: AccordionProps) {
 
 export function AccordionItem({ children, className }: AccordionItemProps) {
   return (
-    <div className={cn('border rounded-lg bg-white dark:bg-gray-950', className)}>
+    <div className={cn('border rounded-lg bg-white', className)}>
       {children}
     </div>
   )
@@ -55,7 +55,7 @@ export function AccordionTrigger({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center justify-between px-4 py-3 text-left transition-all hover:bg-gray-50 dark:hover:bg-gray-900',
+        'flex w-full items-center justify-between px-4 py-3 text-left transition-all hover:bg-gray-50',
         className
       )}
     >

@@ -23,7 +23,7 @@ export function PageLayout({
   showBreadcrumbs = true
 }: PageLayoutProps) {
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-blue-950">
+    <div className="min-h-screen flex bg-white">
       {/* 常時表示サイドバー */}
       <Sidebar />
       
@@ -32,7 +32,7 @@ export function PageLayout({
         <main className={cn('min-h-screen', className)}>
           {/* パンくずリストとヘッダー */}
           {(showBreadcrumbs && breadcrumbs.length > 0) || title && (
-            <div className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+            <div className="bg-white border-b border-gray-200">
               <div className="px-4 sm:px-6 lg:px-8 py-4">
                 {showBreadcrumbs && breadcrumbs.length > 0 && (
                   <div className="mb-3">
@@ -42,11 +42,11 @@ export function PageLayout({
                 
                 {title && (
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                       {title}
                     </h1>
                     {description && (
-                      <p className="mt-1 text-gray-600 dark:text-gray-400">
+                      <p className="mt-1 text-gray-600">
                         {description}
                       </p>
                     )}

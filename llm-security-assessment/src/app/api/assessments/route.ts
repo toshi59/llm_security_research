@@ -25,7 +25,28 @@ export async function GET(request: NextRequest) {
       })
     );
     
-    return NextResponse.json(assessmentWithItems);
+    // 同じモデルに対して最新のアセスメントのみを保持
+    const latestAssessments = assessmentWithItems.reduce((acc: any[], current: any) => {
+      const existingIndex = acc.findIndex(a => a.model?.name === current.model?.name);
+      
+      if (existingIndex === -1) {
+        // 新しいモデルの場合は追加
+        acc.push(current);
+      } else {
+        // 既存モデルの場合、より新しい日時のものを保持
+        const existing = acc[existingIndex];
+        const currentDate = new Date(current.createdAt);
+        const existingDate = new Date(existing.createdAt);
+        
+        if (currentDate > existingDate) {
+          acc[existingIndex] = current;
+        }
+      }
+      
+      return acc;
+    }, []);
+    
+    return NextResponse.json(latestAssessments);
   } catch (error) {
     console.error('Error fetching assessments:', error);
     return NextResponse.json(

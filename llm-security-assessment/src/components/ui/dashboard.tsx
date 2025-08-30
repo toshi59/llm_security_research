@@ -8,6 +8,7 @@ import { CheckCircle, XCircle, AlertTriangle, Clock, BarChart3, Users, Shield, T
 
 interface DashboardStats {
   totalItems: number
+  evaluatedModels: number
   evaluatedItems: number
   compliantItems: number
   nonCompliantItems: number
@@ -47,13 +48,21 @@ export function Dashboard({ stats, className }: DashboardProps) {
   return (
     <div className={cn('space-y-6', className)}>
       {/* 概要統計カード */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard
+          title="評価モデル数"
+          value={stats.evaluatedModels}
+          icon={<Users className="h-5 w-5 text-purple-600" />}
+          description="アセスメント済み"
+          className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
+        />
+        
         <StatCard
           title="総項目数"
           value={stats.totalItems}
           icon={<BarChart3 className="h-5 w-5" />}
           description="セキュリティ評価項目"
-          className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-800"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
         />
         
         <StatCard
@@ -61,7 +70,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
           value={stats.evaluatedItems}
           icon={<CheckCircle className="h-5 w-5 text-green-600" />}
           description={`${evaluationRate.toFixed(1)}% 完了`}
-          className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 border-green-200 dark:border-green-800"
+          className="bg-gradient-to-br from-green-50 to-green-100 border-green-200"
         />
         
         <StatCard
@@ -69,7 +78,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
           value={`${complianceRate.toFixed(1)}%`}
           icon={<Shield className="h-5 w-5 text-blue-600" />}
           description="評価済み項目中の適合率"
-          className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-800"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
         />
         
         <StatCard
@@ -77,7 +86,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
           value={stats.nonCompliantItems + stats.needsImprovementItems}
           icon={<AlertTriangle className="h-5 w-5 text-orange-600" />}
           description="不適合・要改善項目"
-          className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 border-orange-200 dark:border-orange-800"
+          className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200"
         />
       </div>
 
@@ -99,7 +108,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{stats.compliantItems}</span>
-                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800">
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                     {stats.totalItems > 0 ? ((stats.compliantItems / stats.totalItems) * 100).toFixed(1) : 0}%
                   </Badge>
                 </div>
@@ -112,7 +121,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{stats.nonCompliantItems}</span>
-                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-800">
+                  <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
                     {stats.totalItems > 0 ? ((stats.nonCompliantItems / stats.totalItems) * 100).toFixed(1) : 0}%
                   </Badge>
                 </div>
@@ -125,7 +134,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{stats.needsImprovementItems}</span>
-                  <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-300 dark:border-yellow-800">
+                  <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
                     {stats.totalItems > 0 ? ((stats.needsImprovementItems / stats.totalItems) * 100).toFixed(1) : 0}%
                   </Badge>
                 </div>
@@ -148,10 +157,10 @@ export function Dashboard({ stats, className }: DashboardProps) {
             {/* プログレスバー */}
             <div className="mt-6">
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-600 dark:text-gray-400">全体進捗</span>
+                <span className="text-gray-600">全体進捗</span>
                 <span className="font-medium">{evaluationRate.toFixed(1)}%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${evaluationRate}%` }}
@@ -204,7 +213,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
                     />
                     {/* 未評価 */}
                     <div
-                      className="bg-gray-300 dark:bg-gray-600 rounded-sm h-full transition-all"
+                      className="bg-gray-300 rounded-sm h-full transition-all"
                       style={{
                         width: `${category.total > 0 ? (category.pending / category.total) * 100 : 0}%`
                       }}
@@ -226,7 +235,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
                       <span>{category.nonCompliant}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded" />
+                      <div className="w-2 h-2 bg-gray-300 rounded" />
                       <span>{category.pending}</span>
                     </div>
                   </div>
@@ -248,29 +257,29 @@ export function Dashboard({ stats, className }: DashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="text-2xl font-bold text-red-600">
                   {stats.riskLevelStats.critical}
                 </div>
-                <div className="text-sm text-red-600 dark:text-red-400 font-medium">極高</div>
+                <div className="text-sm text-red-600 font-medium">極高</div>
               </div>
-              <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="text-2xl font-bold text-orange-600">
                   {stats.riskLevelStats.high}
                 </div>
-                <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">高</div>
+                <div className="text-sm text-orange-600 font-medium">高</div>
               </div>
-              <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="text-2xl font-bold text-yellow-600">
                   {stats.riskLevelStats.medium}
                 </div>
-                <div className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">中</div>
+                <div className="text-sm text-yellow-600 font-medium">中</div>
               </div>
-              <div className="text-center p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-2xl font-bold text-green-600">
                   {stats.riskLevelStats.low}
                 </div>
-                <div className="text-sm text-green-600 dark:text-green-400 font-medium">低</div>
+                <div className="text-sm text-green-600 font-medium">低</div>
               </div>
             </div>
           </CardContent>
@@ -286,14 +295,14 @@ export function Dashboard({ stats, className }: DashboardProps) {
           <CardContent>
             <div className="space-y-4">
               {stats.recentActivity.slice(0, 5).map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    {activity.type === 'evaluation' && <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-                    {activity.type === 'investigation' && <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-                    {activity.type === 'update' && <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
+                <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    {activity.type === 'evaluation' && <CheckCircle className="h-4 w-4 text-blue-600" />}
+                    {activity.type === 'investigation' && <BarChart3 className="h-4 w-4 text-blue-600" />}
+                    {activity.type === 'update' && <Users className="h-4 w-4 text-blue-600" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-gray-700">
                       {activity.description}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
@@ -336,13 +345,13 @@ function StatCard({ title, value, icon, description, className }: StatCardProps)
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <p className="text-sm font-medium text-gray-600">
               {title}
             </p>
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="text-3xl font-bold text-gray-900">
               {value}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-gray-500">
               {description}
             </p>
           </div>

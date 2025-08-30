@@ -46,7 +46,7 @@ export function SlideOver({
     <>
       {/* オーバーレイ */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+        className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -54,9 +54,9 @@ export function SlideOver({
       {/* スライドオーバー */}
       <div
         className={cn(
-          'fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white dark:bg-gray-950 shadow-2xl',
+          'fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white shadow-2xl',
           'transform transition-transform duration-300 ease-in-out',
-          'border-l border-gray-200 dark:border-gray-800',
+          'border-l border-gray-200',
           isOpen ? 'translate-x-0' : 'translate-x-full',
           className
         )}
@@ -66,10 +66,10 @@ export function SlideOver({
       >
         <div className="flex flex-col h-full">
           {/* ヘッダー */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2
               id="slide-over-title"
-              className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+              className="text-xl font-semibold text-gray-900"
             >
               {title}
             </h2>
@@ -77,7 +77,7 @@ export function SlideOver({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-gray-500 hover:text-gray-700"
               aria-label="閉じる"
             >
               <X className="h-5 w-5" />
@@ -120,12 +120,38 @@ export function SecurityItemDetail({
 }: SecurityItemDetailProps) {
   if (!item) return null
 
+  // 証跡内のURLをリンク化する関数
+  const renderEvidenceWithLinks = (text: string) => {
+    // URL のパターンをマッチ
+    const urlPattern = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/gi;
+    const parts = text.split(urlPattern);
+    
+    return parts.map((part, index) => {
+      if (urlPattern.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline break-all inline-flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+          </a>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   const getRiskLevelBadge = (level: string) => {
     const variants = {
-      low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-      medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-      high: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-      critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      low: 'bg-green-100 text-green-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      high: 'bg-orange-100 text-orange-800',
+      critical: 'bg-red-100 text-red-800'
     }
     
     const labels = {
@@ -151,7 +177,7 @@ export function SecurityItemDetail({
       case '要改善':
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />
       default:
-        return <div className="h-5 w-5 rounded-full bg-gray-300 dark:bg-gray-600" />
+        return <div className="h-5 w-5 rounded-full bg-gray-300" />
     }
   }
 
@@ -252,28 +278,16 @@ export function SecurityItemDetail({
                 {item.evidences.map((evidence, index) => (
                   <div
                     key={index}
-                    className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800"
+                    className="p-3 bg-gray-50 rounded-lg border border-gray-200"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-medium text-blue-600 dark:text-blue-400">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-600">
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {evidence}
-                        </p>
-                        {/* URLっぽい文字列の場合はリンク化 */}
-                        {evidence.match(/https?:\/\//) && (
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="p-0 h-auto text-xs mt-2"
-                            onClick={() => window.open(evidence.match(/https?:\/\/[^\s]+/)?.[0], '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            リンクを開く
-                          </Button>
-                        )}
+                        <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {renderEvidenceWithLinks(evidence)}
+                        </div>
                       </div>
                     </div>
                   </div>

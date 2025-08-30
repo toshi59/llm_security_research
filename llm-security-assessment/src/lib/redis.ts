@@ -153,6 +153,24 @@ export class RedisService {
       .filter((log): log is AuditLog => log !== null)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
+
+  // 削除メソッド
+  static async deleteAssessment(id: string): Promise<boolean> {
+    const result = await redis.del(`assessment:${id}`);
+    return result === 1;
+  }
+
+  static async deleteAssessmentItem(id: string): Promise<boolean> {
+    const item = await redis.get<AssessmentItem>(`assessment_item:${id}`);
+    if (item) {
+      // インデックスからも削除
+      await redis.srem(`idx:assessment_items:by_model:${item.assessmentId}`, id);
+      await redis.srem(`idx:assessment_items:by_item:${item.itemId}`, id);
+    }
+    
+    const result = await redis.del(`assessment_item:${id}`);
+    return result === 1;
+  }
 }
 
 export default redis;

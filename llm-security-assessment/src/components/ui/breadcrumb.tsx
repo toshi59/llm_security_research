@@ -34,7 +34,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             {item.href && !isLast ? (
               <Link
                 href={item.href}
-                className="flex items-center gap-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -44,8 +44,8 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                 className={cn(
                   'flex items-center gap-1',
                   isLast 
-                    ? 'text-gray-900 dark:text-gray-100 font-medium' 
-                    : 'text-gray-500 dark:text-gray-400'
+                    ? 'text-gray-900 font-medium' 
+                    : 'text-gray-500'
                 )}
               >
                 {item.icon}

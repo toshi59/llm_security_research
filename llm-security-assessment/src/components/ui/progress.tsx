@@ -15,7 +15,7 @@ export function Progress({ value, className, indicatorClassName }: ProgressProps
   return (
     <div 
       className={cn(
-        'relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700',
+        'relative h-2 w-full overflow-hidden rounded-full bg-gray-200',
         className
       )}
     >

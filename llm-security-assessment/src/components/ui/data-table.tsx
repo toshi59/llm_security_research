@@ -124,7 +124,7 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* フィルター展開エリア */}
       {showFilters && filterable && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-2xl">
           {columns.filter(col => col.filterable).map((column) => (
             <div key={String(column.key)} className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -154,10 +154,10 @@ export function DataTable<T extends Record<string, any>>({
       )}
 
       {/* データテーブル */}
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-950">
+      <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 {columns.map((column) => (
                   <th
@@ -197,7 +197,7 @@ export function DataTable<T extends Record<string, any>>({
                     key={index}
                     className={cn(
                       'border-b border-gray-100 dark:border-gray-800 last:border-b-0',
-                      onRowClick && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50',
+                      onRowClick && 'cursor-pointer hover:bg-gray-50',
                       'transition-colors',
                       rowClassName?.(row)
                     )}

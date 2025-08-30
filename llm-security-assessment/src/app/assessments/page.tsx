@@ -11,7 +11,7 @@ import { Dashboard, DashboardStats } from '@/components/ui/dashboard';
 import { PageLayout } from '@/components/layout/page-layout';
 import { AssessmentsBreadcrumb } from '@/components/ui/breadcrumb';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { ChevronRight, CheckCircle, XCircle, AlertCircle, BarChart3, Filter, Home, Package2, Layers } from 'lucide-react';
+import { ChevronRight, ChevronDown, CheckCircle, XCircle, AlertCircle, BarChart3, Filter, Home, Package2, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SecurityItem {
@@ -84,7 +84,29 @@ export default function AssessmentsPage() {
       if (assessmentsRes.ok && itemsRes.ok) {
         const assessmentsData = await assessmentsRes.json();
         const itemsData = await itemsRes.json();
-        setAssessments(assessmentsData);
+        
+        // 同じモデルに対して最新のアセスメントのみを保持
+        const latestAssessments = assessmentsData.reduce((acc: Assessment[], current: Assessment) => {
+          const existingIndex = acc.findIndex(a => a.model?.name === current.model?.name);
+          
+          if (existingIndex === -1) {
+            // 新しいモデルの場合は追加
+            acc.push(current);
+          } else {
+            // 既存モデルの場合、より新しい日時のものを保持
+            const existing = acc[existingIndex];
+            const currentDate = new Date(current.createdAt);
+            const existingDate = new Date(existing.createdAt);
+            
+            if (currentDate > existingDate) {
+              acc[existingIndex] = current;
+            }
+          }
+          
+          return acc;
+        }, []);
+        
+        setAssessments(latestAssessments);
         setSecurityItems(itemsData);
       }
     } catch (error) {
@@ -116,7 +138,7 @@ export default function AssessmentsPage() {
       case '要改善':
         return <Badge variant="warning">要改善</Badge>;
       default:
-        return <Badge variant="outline">未評価</Badge>;
+        return <Badge variant="outline">未アセスメント</Badge>;
     }
   };
 
@@ -145,7 +167,7 @@ export default function AssessmentsPage() {
         { value: '○', label: '適合' },
         { value: '×', label: '不適合' },
         { value: '要改善', label: '要改善' },
-        { value: 'null', label: '未評価' }
+        { value: 'null', label: '未アセスメント' }
       ],
       multiple: true
     },
@@ -210,6 +232,7 @@ export default function AssessmentsPage() {
   // ダッシュボード統計の計算
   const stats: DashboardStats = {
     totalItems: tableData.length,
+    evaluatedModels: models.length,
     evaluatedItems: tableData.filter(item => item.judgement !== null).length,
     compliantItems: tableData.filter(item => item.judgement === '○').length,
     nonCompliantItems: tableData.filter(item => item.judgement === '×').length,
@@ -234,7 +257,7 @@ export default function AssessmentsPage() {
     recentActivity: assessments.slice(0, 5).map(assessment => ({
       id: assessment.id,
       type: 'evaluation' as const,
-      description: `${assessment.model?.name}の評価を実行`,
+      description: `${assessment.model?.name}のアセスメントを実行`,
       timestamp: assessment.createdAt,
       user: assessment.createdBy
     }))
@@ -249,7 +272,7 @@ export default function AssessmentsPage() {
       filterable: true,
       className: 'w-[150px]',
       render: (value) => (
-        <div className="font-medium text-gray-900 dark:text-gray-100">{value}</div>
+        <div className="font-medium text-gray-900">{value}</div>
       )
     },
     {
@@ -259,7 +282,7 @@ export default function AssessmentsPage() {
       filterable: true,
       className: 'w-[180px]',
       render: (value) => (
-        <Badge variant="outline" className="text-xs">{value}</Badge>
+        <Badge variant="outline" className="text-xs text-gray-900 dark:text-gray-100">{value}</Badge>
       )
     },
     {
@@ -267,9 +290,9 @@ export default function AssessmentsPage() {
       header: 'チェック項目',
       sortable: true,
       filterable: true,
-      className: 'min-w-[300px]',
+      className: 'w-[200px]',
       render: (value) => (
-        <div className="text-base text-gray-900 dark:text-gray-100">{value}</div>
+        <div className="text-base text-gray-900">{value}</div>
       )
     },
     {
@@ -290,14 +313,14 @@ export default function AssessmentsPage() {
       key: 'riskLevel',
       header: 'リスク',
       sortable: true,
-      className: 'w-[400px]',
+      className: 'min-w-[500px]',
       render: (value, row) => {
         const securityItem = securityItems.find(si => si.id === row.assessmentItem?.itemId);
         const riskColors = {
-          low: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-          medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-          high: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-          critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+          low: 'bg-green-100 text-green-800',
+          medium: 'bg-yellow-100 text-yellow-800',
+          high: 'bg-orange-100 text-orange-800',
+          critical: 'bg-red-100 text-red-800'
         };
         const riskLabels = {
           low: '低', medium: '中', high: '高', critical: '極高'
@@ -306,12 +329,12 @@ export default function AssessmentsPage() {
           <div className="space-y-1">
             <span className={cn(
               'inline-block px-2 py-1 text-xs font-medium rounded-full',
-              riskColors[value as keyof typeof riskColors] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+              riskColors[value as keyof typeof riskColors] || 'bg-gray-100 text-gray-800'
             )}>
               {riskLabels[value as keyof typeof riskLabels] || value}
             </span>
             {securityItem?.risk && (
-              <div className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+              <div className="text-xs text-gray-600 line-clamp-2">
                 {securityItem.risk}
               </div>
             )}
@@ -321,11 +344,11 @@ export default function AssessmentsPage() {
     },
     {
       key: 'filledBy',
-      header: '評価者',
+      header: 'アセスメント実施者',
       sortable: true,
-      className: 'w-[100px]',
+      className: 'w-[120px]',
       render: (value) => (
-        <span className="text-sm text-gray-900 dark:text-gray-100">{value}</span>
+        <span className="text-sm text-gray-900">{value}</span>
       )
     }
   ];
@@ -386,6 +409,84 @@ export default function AssessmentsPage() {
     setFilterValues(prev => ({ ...prev, [key]: [] }));
   };
 
+  // モデル別サマリ生成関数
+  const generateSummaryForModel = (modelName: string, modelData: any[], assessment: Assessment) => {
+    const totalItems = modelData.length;
+    const compliantItems = modelData.filter(item => item.judgement === '○').length;
+    const nonCompliantItems = modelData.filter(item => item.judgement === '×').length;
+    const improvementItems = modelData.filter(item => item.judgement === '要改善').length;
+    const pendingItems = modelData.filter(item => !item.judgement).length;
+    
+    const complianceRate = totalItems > 0 ? Math.round((compliantItems / totalItems) * 100) : 0;
+    
+    // 主要な問題カテゴリを特定
+    const categoryStats = categories.reduce((acc, category) => {
+      const categoryItems = modelData.filter(item => item.category === category);
+      const issues = categoryItems.filter(item => item.judgement === '×' || item.judgement === '要改善');
+      if (issues.length > 0) {
+        acc.push({ category, issueCount: issues.length, totalCount: categoryItems.length });
+      }
+      return acc;
+    }, [] as Array<{ category: string; issueCount: number; totalCount: number }>);
+    
+    // 問題の多いカテゴリを特定
+    const topIssueCategories = categoryStats
+      .sort((a, b) => b.issueCount - a.issueCount)
+      .slice(0, 2)
+      .map(stat => stat.category);
+
+    // 強みのあるカテゴリを特定
+    const strongCategories = categories.reduce((acc, category) => {
+      const categoryItems = modelData.filter(item => item.category === category);
+      const compliantCount = categoryItems.filter(item => item.judgement === '○').length;
+      const rate = categoryItems.length > 0 ? (compliantCount / categoryItems.length) * 100 : 0;
+      if (rate >= 90) {
+        acc.push(category);
+      }
+      return acc;
+    }, [] as string[]);
+
+    let summary = `${modelName}のセキュリティアセスメント結果: `;
+    
+    if (complianceRate >= 80) {
+      summary += `総合適合率${complianceRate}%で、優良なセキュリティ水準を維持しています。`;
+    } else if (complianceRate >= 60) {
+      summary += `総合適合率${complianceRate}%で、概ね良好ですが改善の余地があります。`;
+    } else if (complianceRate >= 40) {
+      summary += `総合適合率${complianceRate}%で、重要な改善が必要です。`;
+    } else {
+      summary += `総合適合率${complianceRate}%で、包括的な改善が急務です。`;
+    }
+    
+    // 強みがある場合は言及
+    if (strongCategories.length > 0) {
+      summary += ` 「${strongCategories.slice(0, 2).join('」「')}」では特に優秀な評価を獲得しています。`;
+    }
+    
+    // 問題がある場合の詳細
+    if (nonCompliantItems > 0 || improvementItems > 0) {
+      summary += ` 一方で、`;
+      if (nonCompliantItems > 0) {
+        summary += `${nonCompliantItems}項目が不適合`;
+      }
+      if (nonCompliantItems > 0 && improvementItems > 0) {
+        summary += '、';
+      }
+      if (improvementItems > 0) {
+        summary += `${improvementItems}項目で要改善`;
+      }
+      summary += 'となっており';
+      
+      if (topIssueCategories.length > 0) {
+        summary += `、特に「${topIssueCategories.join('」「')}」分野での対策が重要です。`;
+      } else {
+        summary += '、各分野での継続的な改善が推奨されます。';
+      }
+    }
+    
+    return summary;
+  };
+
   // モデルごとのデータをグループ化
   const groupedByModel = models.reduce((acc, modelName) => {
     const modelData = filteredData.filter(item => item.model === modelName);
@@ -423,11 +524,11 @@ export default function AssessmentsPage() {
 
   return (
     <PageLayout
-      title="LLMセキュリティ評価"
-      description="セキュリティ評価結果の一覧・分析画面"
+      title="LLMセキュリティアセスメント"
+      description="セキュリティアセスメント結果の一覧・分析画面"
       breadcrumbs={[
         { label: 'ホーム', href: '/', icon: <Home className="h-3 w-3" /> },
-        { label: '評価結果一覧' }
+        { label: 'アセスメント結果一覧' }
       ]}
     >
       <div className="space-y-6">
@@ -448,7 +549,7 @@ export default function AssessmentsPage() {
               onClick={() => setShowDashboard(false)}
             >
               <Filter className="h-4 w-4 mr-2" />
-              詳細一覧
+              詳細アセスメント結果
             </Button>
           </div>
         </div>
@@ -458,7 +559,7 @@ export default function AssessmentsPage() {
           <Dashboard stats={stats} />
         )}
 
-        {/* 詳細一覧表示 */}
+        {/* アセスメント結果一覧表示 */}
         {!showDashboard && (
           <div className="space-y-6">
             {/* フィルターエリア */}
@@ -476,10 +577,24 @@ export default function AssessmentsPage() {
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
+                    <CardTitle className="text-sm">評価モデル数</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {models.length}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      アセスメント済み
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
                     <CardTitle className="text-sm">表示中の件数</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    <div className="text-2xl font-bold text-blue-600">
                       {filteredData.length}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -504,6 +619,11 @@ export default function AssessmentsPage() {
               {Object.entries(groupedByModel).map(([modelName, modelData]) => {
                 const isModelExpanded = expandedModels.includes(modelName);
                 
+                // このモデルに対応するアセスメントを取得
+                const modelAssessment = assessments.find(assessment => 
+                  assessment.model?.name === modelName
+                );
+                
                 // カテゴリ別にグループ化
                 const categoriesByModel = categories.reduce((acc, category) => {
                   const categoryData = modelData.filter(item => item.category === category);
@@ -514,22 +634,35 @@ export default function AssessmentsPage() {
                 }, {} as Record<string, typeof modelData>);
                 
                 return (
-                  <AccordionItem key={modelName} className="border border-gray-200 dark:border-gray-800">
+                  <AccordionItem key={modelName} className="border border-gray-200">
                     <AccordionTrigger 
                       isOpen={isModelExpanded}
                       onClick={() => toggleModelExpansion(modelName)}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-900"
+                      className="hover:bg-gray-50"
                     >
-                      <div className="flex items-center gap-3">
-                        <Package2 className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <div className="font-medium text-lg">{modelName}</div>
-                          <div className="text-sm text-gray-500">
+                      <div className="flex items-start gap-3 w-full">
+                        <Package2 className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-lg text-gray-900 mb-1">{modelName}</div>
+                          <div className="text-sm text-gray-600 mb-2">
                             {modelData.length}項目 • 
                             適合: {modelData.filter(item => item.judgement === '○').length} • 
                             不適合: {modelData.filter(item => item.judgement === '×').length} • 
                             要改善: {modelData.filter(item => item.judgement === '要改善').length}
                           </div>
+                          {modelAssessment && (
+                            <div className="text-sm text-gray-700 bg-gray-50 rounded p-3 mt-2 border border-gray-200">
+                              <div className="font-medium text-xs text-gray-500 mb-2">📋 アセスメントサマリ</div>
+                              <p className="text-sm leading-relaxed overflow-hidden" 
+                                 style={{ 
+                                   display: '-webkit-box',
+                                   WebkitLineClamp: 4,
+                                   WebkitBoxOrient: 'vertical' as const
+                                 }}>
+                                {modelAssessment.summary || generateSummaryForModel(modelName, modelData, modelAssessment)}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -544,7 +677,7 @@ export default function AssessmentsPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleCategoryExpansion(modelName, category)}
-                                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-900 rounded-t-lg"
+                                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 rounded-t-lg"
                               >
                                 <div className="flex items-center gap-2">
                                   {isCategoryExpanded ? (
@@ -553,7 +686,7 @@ export default function AssessmentsPage() {
                                     <ChevronRight className="h-4 w-4 text-gray-500" />
                                   )}
                                   <Layers className="h-4 w-4 text-gray-600" />
-                                  <Badge variant="outline" className="text-sm">{category}</Badge>
+                                  <Badge variant="outline" className="text-sm text-gray-900 dark:text-gray-100">{category}</Badge>
                                   <span className="text-sm text-gray-500">({categoryData.length}項目)</span>
                                 </div>
                               </button>
@@ -566,7 +699,7 @@ export default function AssessmentsPage() {
                                     searchable={false}
                                     onRowClick={handleRowClick}
                                     emptyMessage="このカテゴリにはデータがありません"
-                                    rowClassName={(row) => 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50'}
+                                    rowClassName={(row) => 'cursor-pointer hover:bg-gray-50'}
                                     className="border-0"
                                   />
                                 </div>
