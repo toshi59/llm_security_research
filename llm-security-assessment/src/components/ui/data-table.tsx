@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { designTokens, judgementColors } from '@/lib/design-tokens'
 import { ChevronDown, ChevronUp, Search, Filter, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,7 +27,7 @@ interface DataTableProps<T> {
   rowClassName?: (row: T) => string
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   searchable = true,

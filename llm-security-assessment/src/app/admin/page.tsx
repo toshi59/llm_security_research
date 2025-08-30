@@ -7,9 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Search, LogOut, Loader2, CheckCircle, AlertTriangle, XCircle, Zap, ExternalLink, BarChart3, Home } from 'lucide-react';
+import { Search, LogOut, Loader2, CheckCircle, XCircle, Home } from 'lucide-react';
 import { PageLayout } from '@/components/layout/page-layout';
-import { cn } from '@/lib/utils';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -23,8 +22,19 @@ export default function AdminPage() {
     status: 'pending' | 'active' | 'completed' | 'error';
     message: string;
   }[]>([]);
-  const [result, setResult] = useState<any>(null);
-  const [recentAssessments, setRecentAssessments] = useState<any[]>([]);
+  const [result, setResult] = useState<{
+    assessment: { id: string; modelId: string; createdAt: string; createdBy: string; status: string; summary: string };
+    model: { id: string; name: string; vendor: string; notes: string };
+    items: Array<{
+      id: string;
+      assessmentId: string;
+      itemId: string;
+      judgement: '○' | '×' | '要改善' | null;
+      comment: string;
+      evidences: Array<{ url: string; title: string; snippet: string }>;
+    }>;
+  } | null>(null);
+  const [recentAssessments, setRecentAssessments] = useState<never[]>([]);
   const [cleaning, setCleaning] = useState(false);
 
   const handleLogout = async () => {
@@ -131,7 +141,7 @@ export default function AdminPage() {
         setProgress('アセスメント完了！');
         setProgressValue(100);
       } else {
-        const currentActiveIndex = steps.findIndex(step => step.status === 'active' || step.status === 'pending');
+        const currentActiveIndex = steps.findIndex(step => ['active', 'pending'].includes(step.status));
         if (currentActiveIndex !== -1) {
           updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
         }
@@ -139,7 +149,7 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Investigation error:', error);
-      const currentActiveIndex = steps.findIndex(step => step.status === 'active' || step.status === 'pending');
+      const currentActiveIndex = steps.findIndex(step => ['active', 'pending'].includes(step.status));
       if (currentActiveIndex !== -1) {
         updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
       }
@@ -161,7 +171,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           modelId: result.model.id,
           summary: result.assessment.summary,
-          items: result.items.map((item: any) => ({
+          items: result.items.map((item) => ({
             itemId: item.itemId,
             judgement: item.judgement,
             comment: item.comment,
@@ -327,7 +337,7 @@ export default function AdminPage() {
                     <CardContent className="p-4">
                       <div className="text-sm text-muted-foreground">適合</div>
                       <div className="text-2xl font-bold text-green-500">
-                        {result.items.filter((i: any) => i.judgement === '○').length}
+                        {result.items.filter((i) => i.judgement === '○').length}
                       </div>
                     </CardContent>
                   </Card>
@@ -335,7 +345,7 @@ export default function AdminPage() {
                     <CardContent className="p-4">
                       <div className="text-sm text-muted-foreground">不適合</div>
                       <div className="text-2xl font-bold text-red-500">
-                        {result.items.filter((i: any) => i.judgement === '×').length}
+                        {result.items.filter((i) => i.judgement === '×').length}
                       </div>
                     </CardContent>
                   </Card>
@@ -343,7 +353,7 @@ export default function AdminPage() {
                     <CardContent className="p-4">
                       <div className="text-sm text-muted-foreground">要改善</div>
                       <div className="text-2xl font-bold text-yellow-500">
-                        {result.items.filter((i: any) => i.judgement === '要改善').length}
+                        {result.items.filter((i) => i.judgement === '要改善').length}
                       </div>
                     </CardContent>
                   </Card>
@@ -360,7 +370,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {result.items.slice(0, 10).map((item: any, index: number) => (
+                      {result.items.slice(0, 10).map((item, index: number) => (
                         <tr key={index} className="border-b">
                           <td className="p-2">項目 {index + 1}</td>
                           <td className="p-2 text-center">

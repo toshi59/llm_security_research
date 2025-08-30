@@ -55,7 +55,7 @@ export interface AuditLog {
   action: string;
   entityType: string;
   entityId: string;
-  changes?: any;
+  changes?: Record<string, unknown>;
 }
 
 export interface InvestigationRequest {

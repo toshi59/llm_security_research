@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '@/lib/redis';
 import { seedDatabase } from '@/lib/seed';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     await seedDatabase();
     

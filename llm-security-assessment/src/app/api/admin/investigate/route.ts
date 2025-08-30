@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { RedisService } from '@/lib/redis';
 import { InvestigationService } from '@/lib/investigation';
-import { AuthService } from '@/lib/auth';
 
 const investigateSchema = z.object({
   modelName: z.string().min(1),

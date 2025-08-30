@@ -9,7 +9,6 @@ import { Filters, FilterGroup, FilterPills } from '@/components/ui/filters';
 import { SecurityItemDetail } from '@/components/ui/slide-over';
 import { Dashboard, DashboardStats } from '@/components/ui/dashboard';
 import { PageLayout } from '@/components/layout/page-layout';
-import { AssessmentsBreadcrumb } from '@/components/ui/breadcrumb';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ChevronRight, ChevronDown, CheckCircle, XCircle, AlertCircle, BarChart3, Filter, Home, Package2, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -62,7 +61,19 @@ interface Assessment {
 export default function AssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [securityItems, setSecurityItems] = useState<SecurityItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<AssessmentItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{
+    id: string;
+    category: string;
+    subcategory: string;
+    criteria: string;
+    standards: string;
+    riskLevel: 'low' | 'medium' | 'high' | 'critical';
+    judgement?: '○' | '×' | '要改善' | null;
+    comment?: string;
+    evidences?: string[];
+    filledBy?: string;
+    updatedAt?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDashboard, setShowDashboard] = useState(true);
   const [filterValues, setFilterValues] = useState<Record<string, string | string[]>>({});
@@ -129,18 +140,6 @@ export default function AssessmentsPage() {
     }
   };
 
-  const getJudgementBadge = (judgement: string | null) => {
-    switch (judgement) {
-      case '○':
-        return <Badge variant="success">適合</Badge>;
-      case '×':
-        return <Badge variant="destructive">不適合</Badge>;
-      case '要改善':
-        return <Badge variant="warning">要改善</Badge>;
-      default:
-        return <Badge variant="outline">未アセスメント</Badge>;
-    }
-  };
 
   // フィルター設定の生成
   const categories = [...new Set(securityItems.map(item => item.category))];
@@ -272,7 +271,7 @@ export default function AssessmentsPage() {
       filterable: true,
       className: 'w-[150px]',
       render: (value) => (
-        <div className="font-medium text-gray-900">{value}</div>
+        <div className="font-medium text-gray-900">{String(value)}</div>
       )
     },
     {
@@ -282,7 +281,7 @@ export default function AssessmentsPage() {
       filterable: true,
       className: 'w-[180px]',
       render: (value) => (
-        <Badge variant="outline" className="text-xs text-gray-900 dark:text-gray-100">{value}</Badge>
+        <Badge variant="outline" className="text-xs text-gray-900 dark:text-gray-100">{String(value)}</Badge>
       )
     },
     {
@@ -292,7 +291,7 @@ export default function AssessmentsPage() {
       filterable: true,
       className: 'w-[200px]',
       render: (value) => (
-        <div className="text-base text-gray-900">{value}</div>
+        <div className="text-base text-gray-900">{String(value)}</div>
       )
     },
     {
@@ -331,7 +330,7 @@ export default function AssessmentsPage() {
               'inline-block px-2 py-1 text-xs font-medium rounded-full',
               riskColors[value as keyof typeof riskColors] || 'bg-gray-100 text-gray-800'
             )}>
-              {riskLabels[value as keyof typeof riskLabels] || value}
+              {riskLabels[value as keyof typeof riskLabels] || String(value)}
             </span>
             {securityItem?.risk && (
               <div className="text-xs text-gray-600 line-clamp-2">
@@ -348,7 +347,7 @@ export default function AssessmentsPage() {
       sortable: true,
       className: 'w-[120px]',
       render: (value) => (
-        <span className="text-sm text-gray-900">{value}</span>
+        <span className="text-sm text-gray-900">{String(value)}</span>
       )
     }
   ];
@@ -364,7 +363,7 @@ export default function AssessmentsPage() {
 
   const handleRowClick = (row: typeof filteredData[0]) => {
     if (row.securityItem && row.assessmentItem) {
-      setSelectedItem({
+      const selectedDetail = {
         id: row.assessmentItem.id,
         category: row.category,
         subcategory: row.subcategory,
@@ -373,16 +372,17 @@ export default function AssessmentsPage() {
         riskLevel: row.riskLevel as 'low' | 'medium' | 'high' | 'critical',
         judgement: row.judgement,
         comment: row.comment,
-        evidences: row.evidences,
+        evidences: Array.isArray(row.evidences) ? row.evidences.map(e => typeof e === 'string' ? e : (e as Record<string, unknown>)?.url ? String((e as Record<string, unknown>).url) : String(e)) : [],
         filledBy: row.filledBy,
         updatedAt: row.updatedAt
-      });
+      };
+      setSelectedItem(selectedDetail);
     }
   };
 
   // アクティブフィルターのピル表示用データ
   const activeFilters = Object.entries(filterValues)
-    .filter(([_, value]) => {
+    .filter(([_key, value]) => {
       if (Array.isArray(value)) return value.length > 0;
       return value;
     })
@@ -410,12 +410,12 @@ export default function AssessmentsPage() {
   };
 
   // モデル別サマリ生成関数
-  const generateSummaryForModel = (modelName: string, modelData: any[], assessment: Assessment) => {
+  const generateSummaryForModel = (modelName: string, modelData: typeof filteredData, _assessment: Assessment) => {
     const totalItems = modelData.length;
     const compliantItems = modelData.filter(item => item.judgement === '○').length;
     const nonCompliantItems = modelData.filter(item => item.judgement === '×').length;
     const improvementItems = modelData.filter(item => item.judgement === '要改善').length;
-    const pendingItems = modelData.filter(item => !item.judgement).length;
+    const _pendingItems = modelData.filter(item => !item.judgement).length;
     
     const complianceRate = totalItems > 0 ? Math.round((compliantItems / totalItems) * 100) : 0;
     

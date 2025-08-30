@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, AlertTriangle, Clock, BarChart3, Users, Shield, TrendingUp } from 'lucide-react'
 
-interface DashboardStats {
+export interface DashboardStats {
   totalItems: number
   evaluatedModels: number
   evaluatedItems: number
@@ -177,7 +177,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.categoryStats.map((category, index) => (
+              {stats.categoryStats.map((category, _index) => (
                 <div key={category.category} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium truncate">{category.category}</span>

@@ -14,7 +14,7 @@ interface FilterOption {
   count?: number
 }
 
-interface FilterGroup {
+export interface FilterGroup {
   key: string
   label: string
   options: FilterOption[]

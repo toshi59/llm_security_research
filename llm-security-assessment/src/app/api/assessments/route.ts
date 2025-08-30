@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     );
     
     // 同じモデルに対して最新のアセスメントのみを保持
-    const latestAssessments = assessmentWithItems.reduce((acc: any[], current: any) => {
+    type AssessmentWithItems = typeof assessmentWithItems[0];
+    const latestAssessments = assessmentWithItems.reduce((acc: AssessmentWithItems[], current: AssessmentWithItems) => {
       const existingIndex = acc.findIndex(a => a.model?.name === current.model?.name);
       
       if (existingIndex === -1) {

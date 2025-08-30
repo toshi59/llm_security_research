@@ -110,11 +110,11 @@ export const messages = {
 
 export function getMessage(locale: Locale, key: string): string {
   const keys = key.split('.');
-  let current: any = messages[locale];
+  let current: unknown = messages[locale];
   
   for (const k of keys) {
-    current = current?.[k];
+    current = (current as Record<string, unknown>)?.[k];
   }
   
-  return current || key;
+  return (current as string) || key;
 }

@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Shield, Search, FileText, BarChart3, Zap, CheckCircle, ArrowRight, Layers } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { CheckCircle, ArrowRight, Layers, BarChart3 } from 'lucide-react';
 
 interface SecurityItem {
   id: string;
@@ -162,7 +161,7 @@ export default function Home() {
                       
                       <AccordionContent isOpen={isExpanded}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                          {categoryItems.sort((a, b) => a.order - b.order).map((item, index) => (
+                          {categoryItems.sort((a, b) => a.order - b.order).map((item, _index) => (
                             <Card key={item.id} className="h-full hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white">
                               <CardContent className="p-4 h-full flex flex-col">
                                 {/* ヘッダー部分 */}

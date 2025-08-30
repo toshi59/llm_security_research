@@ -152,18 +152,21 @@ export function SecurityItemDetail({
       medium: 'bg-yellow-100 text-yellow-800',
       high: 'bg-orange-100 text-orange-800',
       critical: 'bg-red-100 text-red-800'
-    }
+    } as const
     
     const labels = {
       low: '低',
       medium: '中',
       high: '高',
       critical: '極高'
-    }
+    } as const
+
+    type RiskLevel = keyof typeof variants
+    const riskLevel = level as RiskLevel
 
     return (
-      <span className={cn('px-2 py-1 text-xs font-medium rounded-full', variants[level])}>
-        {labels[level]}
+      <span className={cn('px-2 py-1 text-xs font-medium rounded-full', variants[riskLevel] || 'bg-gray-100 text-gray-800')}>
+        {labels[riskLevel] || level}
       </span>
     )
   }

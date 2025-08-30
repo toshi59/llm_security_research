@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { RedisService } from './redis';
-import type { AdminUser } from './types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
