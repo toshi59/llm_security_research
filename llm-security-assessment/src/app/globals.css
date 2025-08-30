@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-primary: #1e40af;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #1e40af;
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: #020617;
+    --color-foreground: #f8fafc;
+    --color-card: #020617;
+    --color-card-foreground: #f8fafc;
+    --color-primary: #3b82f6;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #1e293b;
+    --color-secondary-foreground: #f8fafc;
+    --color-muted: #1e293b;
+    --color-muted-foreground: #94a3b8;
+    --color-accent: #1e293b;
+    --color-accent-foreground: #f8fafc;
+    --color-border: #334155;
+    --color-input: #334155;
+    --color-ring: #3b82f6;
+  }
+}
+
+.dark {
+  --color-background: #020617;
+  --color-foreground: #f8fafc;
+  --color-card: #020617;
+  --color-card-foreground: #f8fafc;
+  --color-primary: #3b82f6;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1e293b;
+  --color-secondary-foreground: #f8fafc;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-accent: #1e293b;
+  --color-accent-foreground: #f8fafc;
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-ring: #3b82f6;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+}
+
+/* アクセシビリティの改善 */
+*:focus-visible {
+  outline: 2px solid #0066FF;
+  outline-offset: 2px;
+}
+
+/* スクリーンリーダー用の隠しテキスト */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+  .card {
+    border-width: 2px;
+  }
+  .button {
+    border-width: 2px;
+  }
+}
+
+/* 縮小モーション設定の尊重 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 印刷スタイル */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
+}

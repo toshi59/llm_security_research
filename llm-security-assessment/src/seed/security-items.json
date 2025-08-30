@@ -1,0 +1,362 @@
+[
+  {
+    "category": "法規制・プライバシー",
+    "name": "GDPR適合性",
+    "criteria": "EU一般データ保護規則に準拠し、個人データの処理と保護に関する要件を満たしている",
+    "standards": "GDPR（EU規則2016/679）",
+    "evidence_examples": "プライバシーポリシー、データ処理契約書、GDPR準拠証明書",
+    "risk": "最大2000万ユーロまたは年間売上高の4%の制裁金、信頼性の低下",
+    "order": 1
+  },
+  {
+    "category": "法規制・プライバシー",
+    "name": "CCPA/CPRA対応",
+    "criteria": "カリフォルニア州消費者プライバシー法に準拠し、消費者の権利を保護している",
+    "standards": "CCPA/CPRA（カリフォルニア州法）",
+    "evidence_examples": "プライバシー通知、オプトアウト機能、データ開示レポート",
+    "risk": "最大750万ドルの制裁金、集団訴訟リスク",
+    "order": 2
+  },
+  {
+    "category": "法規制・プライバシー",
+    "name": "データローカライゼーション",
+    "criteria": "各国のデータ保存要件に準拠し、必要に応じてローカルでデータを保存",
+    "standards": "各国のデータ保護法（中国サイバーセキュリティ法、ロシア連邦法152-FZ等）",
+    "evidence_examples": "データセンター配置図、データフロー図、コンプライアンス証明書",
+    "risk": "事業停止命令、罰金、市場アクセスの制限",
+    "order": 3
+  },
+  {
+    "category": "法規制・プライバシー",
+    "name": "児童オンラインプライバシー保護",
+    "criteria": "13歳未満の児童の個人情報を適切に保護している",
+    "standards": "COPPA（米国）、UK Age Appropriate Design Code",
+    "evidence_examples": "年齢確認機能、保護者同意フォーム、児童向けプライバシーポリシー",
+    "risk": "最大4万ドル/件の罰金、FTC調査",
+    "order": 4
+  },
+  {
+    "category": "法規制・プライバシー",
+    "name": "医療情報保護",
+    "criteria": "医療情報を扱う場合、HIPAA等の医療プライバシー法に準拠",
+    "standards": "HIPAA（米国）、医療情報システムの安全管理に関するガイドライン（日本）",
+    "evidence_examples": "HIPAA準拠証明、BAA契約書、セキュリティリスク評価書",
+    "risk": "最大200万ドル/年の罰金、刑事責任",
+    "order": 5
+  },
+  {
+    "category": "セキュリティ",
+    "name": "データ暗号化",
+    "criteria": "保存時および転送時のデータ暗号化が実装されている",
+    "standards": "AES-256、TLS 1.3、FIPS 140-2",
+    "evidence_examples": "暗号化仕様書、SSL証明書、暗号化監査レポート",
+    "risk": "データ漏洩、規制違反、信頼性の損失",
+    "order": 6
+  },
+  {
+    "category": "セキュリティ",
+    "name": "アクセス制御",
+    "criteria": "適切な認証・認可メカニズムが実装されている",
+    "standards": "OAuth 2.0、SAML 2.0、多要素認証",
+    "evidence_examples": "アクセス制御ポリシー、IAM設定、監査ログ",
+    "risk": "不正アクセス、データ漏洩、内部脅威",
+    "order": 7
+  },
+  {
+    "category": "セキュリティ",
+    "name": "脆弱性管理",
+    "criteria": "定期的な脆弱性スキャンとパッチ適用プロセスが確立されている",
+    "standards": "CVE、OWASP Top 10、CWE",
+    "evidence_examples": "脆弱性スキャンレポート、パッチ管理記録、ペネトレーションテスト結果",
+    "risk": "セキュリティ侵害、ゼロデイ攻撃、システム停止",
+    "order": 8
+  },
+  {
+    "category": "セキュリティ",
+    "name": "インシデント対応",
+    "criteria": "セキュリティインシデント対応計画と手順が確立されている",
+    "standards": "ISO/IEC 27035、NIST SP 800-61",
+    "evidence_examples": "インシデント対応計画書、訓練記録、過去のインシデントレポート",
+    "risk": "被害の拡大、復旧遅延、規制報告義務違反",
+    "order": 9
+  },
+  {
+    "category": "セキュリティ",
+    "name": "セキュリティ監査ログ",
+    "criteria": "包括的な監査ログの記録と保持が実施されている",
+    "standards": "ISO 27001、SOC 2、PCI DSS",
+    "evidence_examples": "ログ管理ポリシー、ログ保持期間表、SIEM設定",
+    "risk": "フォレンジック能力の欠如、コンプライアンス違反",
+    "order": 10
+  },
+  {
+    "category": "AI倫理",
+    "name": "公平性・バイアス対策",
+    "criteria": "AIモデルの公平性を確保し、バイアスを最小化する仕組みがある",
+    "standards": "ISO/IEC 23053、EU AI Act、NIST AI Risk Management Framework",
+    "evidence_examples": "バイアステストレポート、公平性メトリクス、多様性データセット",
+    "risk": "差別的な出力、法的責任、レピュテーション損失",
+    "order": 11
+  },
+  {
+    "category": "AI倫理",
+    "name": "説明可能性",
+    "criteria": "AIの意思決定プロセスが説明可能で透明性がある",
+    "standards": "XAI原則、EU AI Act Article 13",
+    "evidence_examples": "モデル説明文書、特徴重要度分析、決定木可視化",
+    "risk": "規制違反、信頼性の欠如、訴訟リスク",
+    "order": 12
+  },
+  {
+    "category": "AI倫理",
+    "name": "人間による監督",
+    "criteria": "AIシステムに対する適切な人間の監督メカニズムが存在する",
+    "standards": "EU AI Act、IEEE 7000",
+    "evidence_examples": "監督プロセス文書、ヒューマンインザループ設計、オーバーライド機能",
+    "risk": "制御不能なAI動作、責任の所在不明",
+    "order": 13
+  },
+  {
+    "category": "AI倫理",
+    "name": "有害コンテンツ防止",
+    "criteria": "有害、違法、または不適切なコンテンツの生成を防ぐ仕組みがある",
+    "standards": "デジタルサービス法、コンテンツモデレーションガイドライン",
+    "evidence_examples": "コンテンツフィルター、モデレーションポリシー、ブロックリスト",
+    "risk": "法的責任、プラットフォーム禁止、ユーザー被害",
+    "order": 14
+  },
+  {
+    "category": "AI倫理",
+    "name": "知的財産権の尊重",
+    "criteria": "訓練データと出力における知的財産権を適切に管理している",
+    "standards": "著作権法、特許法、商標法",
+    "evidence_examples": "ライセンス契約、データソース文書、著作権チェックシステム",
+    "risk": "著作権侵害訴訟、使用差止、損害賠償",
+    "order": 15
+  },
+  {
+    "category": "技術的健全性",
+    "name": "モデルの精度・性能",
+    "criteria": "用途に適した精度と性能基準を満たしている",
+    "standards": "ML性能メトリクス（精度、再現率、F1スコア等）",
+    "evidence_examples": "ベンチマーク結果、性能テストレポート、A/Bテスト結果",
+    "risk": "誤った判断、ユーザー満足度低下、競争力喪失",
+    "order": 16
+  },
+  {
+    "category": "技術的健全性",
+    "name": "堅牢性・敵対的攻撃への耐性",
+    "criteria": "敵対的攻撃やデータポイズニングに対する防御機能がある",
+    "standards": "NIST AI 100-2、敵対的MLガイドライン",
+    "evidence_examples": "敵対的テスト結果、防御メカニズム文書、レッドチーム評価",
+    "risk": "モデル操作、セキュリティ侵害、誤動作",
+    "order": 17
+  },
+  {
+    "category": "技術的健全性",
+    "name": "再現性・監査可能性",
+    "criteria": "モデルの訓練と推論プロセスが再現可能で監査可能",
+    "standards": "MLOps ベストプラクティス、ISO/IEC 23053",
+    "evidence_examples": "バージョン管理記録、実験追跡ログ、モデルレジストリ",
+    "risk": "規制監査失敗、デバッグ困難、品質管理不能",
+    "order": 18
+  },
+  {
+    "category": "技術的健全性",
+    "name": "スケーラビリティ",
+    "criteria": "負荷増大に対して適切にスケールする能力がある",
+    "standards": "クラウドネイティブ原則、12ファクターアプリ",
+    "evidence_examples": "負荷テスト結果、オートスケーリング設定、キャパシティプランニング",
+    "risk": "サービス停止、パフォーマンス低下、SLA違反",
+    "order": 19
+  },
+  {
+    "category": "技術的健全性",
+    "name": "障害復旧・事業継続性",
+    "criteria": "適切な障害復旧計画とバックアップ戦略が存在する",
+    "standards": "ISO 22301、災害復旧計画",
+    "evidence_examples": "DR計画書、バックアップテスト記録、RTO/RPO文書",
+    "risk": "長期サービス停止、データ損失、事業影響",
+    "order": 20
+  },
+  {
+    "category": "透明性・説明責任",
+    "name": "モデルカード・文書化",
+    "criteria": "モデルの能力、制限、使用条件が明確に文書化されている",
+    "standards": "Model Cards for Model Reporting、EU AI Act",
+    "evidence_examples": "モデルカード、技術仕様書、使用ガイドライン",
+    "risk": "誤用、期待値のミスマッチ、責任問題",
+    "order": 21
+  },
+  {
+    "category": "透明性・説明責任",
+    "name": "利用規約・責任制限",
+    "criteria": "明確な利用規約と適切な責任制限条項が設定されている",
+    "standards": "契約法、消費者保護法",
+    "evidence_examples": "利用規約、サービス契約書、免責事項",
+    "risk": "無制限の法的責任、訴訟リスク",
+    "order": 22
+  },
+  {
+    "category": "透明性・説明責任",
+    "name": "ユーザーへの通知・同意",
+    "criteria": "AIの使用についてユーザーに適切に通知し同意を得ている",
+    "standards": "EU AI Act、カリフォルニアBot法",
+    "evidence_examples": "AI使用通知、同意フォーム、オプトアウト機能",
+    "risk": "規制違反、信頼喪失、詐欺的行為の告発",
+    "order": 23
+  },
+  {
+    "category": "透明性・説明責任",
+    "name": "苦情処理・救済メカニズム",
+    "criteria": "ユーザーからの苦情や異議申し立てに対する明確なプロセスがある",
+    "standards": "EU AI Act Article 68、消費者保護法",
+    "evidence_examples": "苦情処理手順、エスカレーションプロセス、対応記録",
+    "risk": "規制違反、ユーザー満足度低下、集団訴訟",
+    "order": 24
+  },
+  {
+    "category": "透明性・説明責任",
+    "name": "第三者監査・認証",
+    "criteria": "独立した第三者による監査や認証を受けている",
+    "standards": "ISO/IEC 27001、SOC 2、ISO/IEC 23053",
+    "evidence_examples": "監査報告書、認証証明書、適合性評価",
+    "risk": "信頼性の欠如、デューデリジェンス失敗",
+    "order": 25
+  },
+  {
+    "category": "持続可能性",
+    "name": "環境への影響",
+    "criteria": "AIシステムの環境負荷を測定し最小化する取り組みがある",
+    "standards": "GHGプロトコル、ISO 14001",
+    "evidence_examples": "カーボンフットプリント報告、グリーンコンピューティング施策",
+    "risk": "ESG評価低下、規制強化、投資家離れ",
+    "order": 26
+  },
+  {
+    "category": "持続可能性",
+    "name": "計算リソースの効率性",
+    "criteria": "計算リソースを効率的に使用し無駄を最小化している",
+    "standards": "Green Software Foundation原則",
+    "evidence_examples": "リソース使用率レポート、最適化施策、エッジコンピューティング活用",
+    "risk": "コスト増大、環境負荷、スケーラビリティ問題",
+    "order": 27
+  },
+  {
+    "category": "持続可能性",
+    "name": "長期的なメンテナンス計画",
+    "criteria": "モデルの長期的な保守・更新計画が策定されている",
+    "standards": "ITILサービスライフサイクル",
+    "evidence_examples": "メンテナンス計画書、更新スケジュール、EOL方針",
+    "risk": "技術的負債、セキュリティリスク増大、サービス品質低下",
+    "order": 28
+  },
+  {
+    "category": "データガバナンス",
+    "name": "データ品質管理",
+    "criteria": "訓練データの品質を確保する仕組みがある",
+    "standards": "ISO 8000、データ品質フレームワーク",
+    "evidence_examples": "データ品質メトリクス、クレンジングプロセス、品質監査記録",
+    "risk": "モデル性能低下、誤った予測、信頼性喪失",
+    "order": 29
+  },
+  {
+    "category": "データガバナンス",
+    "name": "データライフサイクル管理",
+    "criteria": "データの収集から廃棄までの全ライフサイクルが管理されている",
+    "standards": "ISO/IEC 27001、データガバナンスフレームワーク",
+    "evidence_examples": "データ管理ポリシー、保持期間表、廃棄証明書",
+    "risk": "規制違反、ストレージコスト増大、データ漏洩",
+    "order": 30
+  },
+  {
+    "category": "データガバナンス",
+    "name": "データ最小化原則",
+    "criteria": "必要最小限のデータのみを収集・処理している",
+    "standards": "GDPR Article 5、プライバシーバイデザイン",
+    "evidence_examples": "データマッピング、必要性評価、定期的なデータ削除記録",
+    "risk": "プライバシー侵害、規制違反、データ管理コスト増大",
+    "order": 31
+  },
+  {
+    "category": "データガバナンス",
+    "name": "データソースの透明性",
+    "criteria": "訓練データのソースと収集方法が明確に文書化されている",
+    "standards": "EU AI Act、データプロベナンス標準",
+    "evidence_examples": "データソース一覧、収集方法文書、ライセンス情報",
+    "risk": "法的問題、バイアス、信頼性の欠如",
+    "order": 32
+  },
+  {
+    "category": "統合・相互運用性",
+    "name": "API標準準拠",
+    "criteria": "業界標準のAPIプロトコルと仕様に準拠している",
+    "standards": "REST、GraphQL、OpenAPI仕様",
+    "evidence_examples": "API仕様書、互換性テスト結果、SDKドキュメント",
+    "risk": "統合困難、採用障壁、メンテナンスコスト増大",
+    "order": 33
+  },
+  {
+    "category": "統合・相互運用性",
+    "name": "データフォーマット互換性",
+    "criteria": "標準的なデータフォーマットをサポートしている",
+    "standards": "JSON、XML、Protocol Buffers",
+    "evidence_examples": "サポートフォーマット一覧、変換ツール、互換性マトリクス",
+    "risk": "データ移行困難、ベンダーロックイン",
+    "order": 34
+  },
+  {
+    "category": "統合・相互運用性",
+    "name": "バージョン管理・後方互換性",
+    "criteria": "適切なバージョン管理と後方互換性が維持されている",
+    "standards": "セマンティックバージョニング、API進化ガイドライン",
+    "evidence_examples": "バージョン管理ポリシー、変更ログ、廃止予定API通知",
+    "risk": "統合破壊、顧客離れ、メンテナンス負担",
+    "order": 35
+  },
+  {
+    "category": "コスト・ROI",
+    "name": "総所有コスト（TCO）の透明性",
+    "criteria": "導入・運用に関わる全コストが明確に提示されている",
+    "standards": "TCO分析フレームワーク",
+    "evidence_examples": "価格表、隠れコスト開示、TCO計算ツール",
+    "risk": "予算超過、ROI未達成、契約紛争",
+    "order": 36
+  },
+  {
+    "category": "コスト・ROI",
+    "name": "使用量ベース課金の透明性",
+    "criteria": "使用量に基づく課金が予測可能で透明性がある",
+    "standards": "クラウド課金ベストプラクティス",
+    "evidence_examples": "課金メトリクス、使用量ダッシュボード、コスト予測ツール",
+    "risk": "予期しない高額請求、予算管理困難",
+    "order": 37
+  },
+  {
+    "category": "コスト・ROI",
+    "name": "価値測定メトリクス",
+    "criteria": "AIシステムの価値を測定する明確なメトリクスがある",
+    "standards": "KPI/OKRフレームワーク",
+    "evidence_examples": "ROI計算書、ビジネス影響分析、成功事例",
+    "risk": "投資正当化困難、継続的な資金調達失敗",
+    "order": 38
+  },
+  {
+    "category": "ベンダー管理",
+    "name": "ベンダーの財務健全性",
+    "criteria": "AIベンダーが財務的に安定している",
+    "standards": "財務デューデリジェンス基準",
+    "evidence_examples": "財務諸表、信用格付け、資金調達履歴",
+    "risk": "サービス停止、サポート終了、移行コスト",
+    "order": 39
+  },
+  {
+    "category": "ベンダー管理",
+    "name": "SLA・サポート体制",
+    "criteria": "明確なSLAと適切なサポート体制が提供されている",
+    "standards": "ITIL サービスレベル管理",
+    "evidence_examples": "SLA契約書、サポートチケット対応時間、エスカレーション手順",
+    "risk": "サービス品質低下、問題解決の遅延、事業影響",
+    "order": 40
+  }
+]
