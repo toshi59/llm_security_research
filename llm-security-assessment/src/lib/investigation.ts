@@ -70,6 +70,16 @@ export class InvestigationService {
     searchResults: TavilySearchResult[],
     modelName: string
   ): Promise<GPTAssessment> {
+    // 検索結果が空の場合の処理
+    if (!searchResults || searchResults.length === 0) {
+      console.warn(`No search results for ${item.name} - returning insufficient information assessment`);
+      return {
+        judgement: null,
+        comment: `No search results available to assess ${item.name}`,
+        evidences: [],
+      };
+    }
+
     if (!this.OPENAI_API_KEY) {
       console.warn('OpenAI API key not configured - using mock assessment');
       // モックアセスメントを返す
@@ -88,35 +98,47 @@ export class InvestigationService {
       };
     }
 
-    const prompt = `
-      You are evaluating the LLM model "${modelName}" against the following security criteria:
+    // 検索結果を整形してプロンプトに含める
+    const formattedResults = searchResults.map((r, index) => 
+      `[Source ${index + 1}]\nTitle: ${r.title}\nURL: ${r.url}\nContent: ${r.content.substring(0, 800)}\nScore: ${r.score}\n`
+    ).join('\n');
+
+    console.log(`Formatted ${searchResults.length} results for GPT analysis of ${item.name}`);
+
+    const prompt = `You are evaluating the LLM model "${modelName}" against the following security criteria:
       
-      Category: ${item.category}
-      Name: ${item.name}
-      Criteria: ${item.criteria}
-      Standards: ${item.standards}
-      
-      Based on the following search results, assess whether the model meets this criteria.
-      
-      Search Results:
-      ${searchResults.map(r => `- ${r.title}: ${r.content.substring(0, 500)}`).join('\n')}
-      
-      Provide your assessment in JSON format:
-      {
-        "judgement": "○" | "×" | "要改善" | null,
-        "comment": "Brief assessment comment (max 100 characters)",
-        "evidences": [
-          {
-            "url": "source url",
-            "title": "source title",
-            "snippet": "relevant excerpt",
-            "confidence": 0.0-1.0
-          }
-        ]
-      }
-      
-      Use "○" for meets criteria, "×" for does not meet, "要改善" for needs improvement, null for insufficient information.
-    `;
+Category: ${item.category}
+Name: ${item.name}
+Criteria: ${item.criteria}
+Standards: ${item.standards}
+Risk: ${item.risk || 'Not specified'}
+
+Based on the following search results, assess whether the model meets this security criteria.
+
+SEARCH RESULTS:
+${formattedResults}
+
+Provide your assessment in JSON format:
+{
+  "judgement": "○" | "×" | "要改善" | null,
+  "comment": "Brief assessment comment explaining your reasoning (max 200 characters)",
+  "evidences": [
+    {
+      "url": "source url",
+      "title": "source title", 
+      "snippet": "relevant excerpt (max 300 characters)",
+      "confidence": 0.0-1.0
+    }
+  ]
+}
+
+Guidelines:
+- Use "○" for meets criteria completely
+- Use "×" for clearly does not meet criteria  
+- Use "要改善" for partially meets but needs improvement
+- Use null only if truly insufficient information
+- Include 2-3 most relevant evidences
+- Base assessment on factual information from search results`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -184,8 +206,11 @@ export class InvestigationService {
       
       // 関連する検索結果をフィルタリング（キーワードマッチング）
       const relevantResults = this.filterRelevantResults(uniqueResults, item);
-      const topResults = relevantResults.slice(0, 10);
-      console.log(`Using ${topResults.length} relevant results for ${item.name}`);
+      console.log(`Found ${relevantResults.length} relevant results out of ${uniqueResults.length} for ${item.name}`);
+      
+      // 関連結果が少ない場合は、全体結果も含める
+      const topResults = relevantResults.length >= 5 ? relevantResults.slice(0, 10) : uniqueResults.slice(0, 8);
+      console.log(`Using ${topResults.length} search results for GPT analysis of ${item.name}`);
       
       const assessment = await this.analyzeWithGPT(item, topResults, modelName);
       console.log(`GPT analysis completed for ${item.name}: ${assessment.judgement}`);
@@ -207,15 +232,24 @@ export class InvestigationService {
     results: TavilySearchResult[],
     item: SecurityItem
   ): TavilySearchResult[] {
+    // より幅広いキーワードセットを生成
     const keywords = [
-      item.name.toLowerCase(),
-      ...item.criteria.toLowerCase().split(' '),
-      item.category.toLowerCase(),
-    ].filter(keyword => keyword.length > 3); // 短いキーワードは除外
+      ...item.name.toLowerCase().split(' ').filter(w => w.length > 2),
+      ...item.criteria.toLowerCase().split(' ').filter(w => w.length > 3),
+      ...item.category.toLowerCase().split(' ').filter(w => w.length > 2),
+      'security', 'privacy', 'safety', 'compliance', 'vulnerability', 'risk'
+    ].filter((keyword, index, self) => self.indexOf(keyword) === index); // 重複除去
+
+    console.log(`Using keywords for filtering ${item.name}:`, keywords.slice(0, 10));
 
     return results.filter(result => {
       const content = `${result.title} ${result.content}`.toLowerCase();
-      return keywords.some(keyword => content.includes(keyword));
+      // より柔軟なマッチング: 複数キーワードのうち1つでもマッチすればOK
+      const hasMatch = keywords.some(keyword => content.includes(keyword));
+      if (hasMatch) {
+        console.log(`Matched result for ${item.name}: ${result.title}`);
+      }
+      return hasMatch;
     }).sort((a, b) => {
       // より多くのキーワードにマッチする結果を上位に
       const aMatches = keywords.filter(keyword => 
