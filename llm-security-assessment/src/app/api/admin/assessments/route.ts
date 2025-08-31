@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
           comment: item.comment,
           evidences: item.evidences,
           filledBy: payload.username,
+          createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         })
       )
