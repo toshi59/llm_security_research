@@ -240,7 +240,7 @@ export class RedisService {
     await redis.hset('audit_logs', { [id]: JSON.stringify(newLog) });
     
     // 時系列検索用のソートセット（スコアはタイムスタンプ）
-    await redis.zadd('audit_logs_timeline', Date.now(), id);
+    await redis.zadd('audit_logs_timeline', { score: Date.now(), member: id });
     
     return newLog;
   }

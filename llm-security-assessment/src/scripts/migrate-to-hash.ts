@@ -134,7 +134,7 @@ async function migrateAuditLogs() {
       
       // 時系列インデックス（ソートセット）も作成
       const timestamp = new Date(log.timestamp).getTime();
-      await redis.zadd('audit_logs_timeline', timestamp, log.id);
+      await redis.zadd('audit_logs_timeline', { score: timestamp, member: log.id });
       
       console.log(`✓ Migrated audit log: ${log.id}`);
     }
