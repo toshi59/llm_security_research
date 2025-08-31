@@ -247,7 +247,7 @@ export class RedisService {
 
   static async getAuditLogs(limit = 100, offset = 0): Promise<AuditLog[]> {
     // 最新の監査ログIDを取得（逆順）
-    const logIds = await redis.zrevrange('audit_logs_timeline', offset, offset + limit - 1);
+    const logIds = await redis.zrange('audit_logs_timeline', offset, offset + limit - 1, { rev: true });
     if (logIds.length === 0) return [];
     
     const logs = await Promise.all(
