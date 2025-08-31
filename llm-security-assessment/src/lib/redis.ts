@@ -261,6 +261,44 @@ export class RedisService {
     const log = await redis.hget('audit_logs', id);
     return log ? (typeof log === 'string' ? JSON.parse(log) : log) as AuditLog : null;
   }
+
+  // ===== アセスメント進捗管理 =====
+  static async setAssessmentProgress(assessmentId: string, progressData: any): Promise<void> {
+    await redis.hset('assessment_progress', { [assessmentId]: JSON.stringify(progressData) });
+    
+    // TTL設定（24時間後に自動削除）
+    await redis.expire(`assessment_progress:${assessmentId}`, 24 * 60 * 60);
+  }
+
+  static async getAssessmentProgress(assessmentId: string): Promise<any | null> {
+    const progress = await redis.hget('assessment_progress', assessmentId);
+    return progress ? (typeof progress === 'string' ? JSON.parse(progress) : progress) : null;
+  }
+
+  static async deleteAssessmentProgress(assessmentId: string): Promise<void> {
+    await redis.hdel('assessment_progress', assessmentId);
+  }
+
+  static async updateAssessmentStep(
+    assessmentId: string, 
+    stepId: string, 
+    status: 'pending' | 'running' | 'completed' | 'error',
+    details?: string
+  ): Promise<void> {
+    const currentProgress = await this.getAssessmentProgress(assessmentId);
+    if (currentProgress) {
+      const stepIndex = currentProgress.steps.findIndex((step: any) => step.id === stepId);
+      if (stepIndex !== -1) {
+        currentProgress.steps[stepIndex] = {
+          ...currentProgress.steps[stepIndex],
+          status,
+          details,
+          timestamp: new Date().toISOString()
+        };
+        await this.setAssessmentProgress(assessmentId, currentProgress);
+      }
+    }
+  }
 }
 
 export default redis;
