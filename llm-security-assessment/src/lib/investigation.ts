@@ -46,7 +46,7 @@ export class InvestigationService {
         body: JSON.stringify({
           api_key: this.TAVILY_API_KEY,
           query: query,
-          max_results: 100,
+          max_results: 500,
           search_depth: 'advanced',
           include_domains: [],
           exclude_domains: [],
@@ -165,21 +165,27 @@ export class InvestigationService {
     securityItems: SecurityItem[]
   ): Promise<Partial<AssessmentItem>[]> {
     console.log(`Investigating ${modelName} (${vendor}) - ${securityItems.length} items`);
+    
+    // モデル全体に対して一度だけTavily検索を実行
+    const modelQuery = `${modelName} ${vendor} security vulnerability assessment compliance`;
+    console.log(`Searching with model query: ${modelQuery}`);
+    
+    const allSearchResults = await this.searchTavily(modelQuery);
+    console.log(`Tavily returned ${allSearchResults.length} results for ${modelName}`);
+    
+    const uniqueResults = this.deduplicateResults(allSearchResults);
+    console.log(`Using ${uniqueResults.length} unique results for analysis`);
+    
+    // 各セキュリティ項目に対してGPT分析を実行
     const assessmentItems: Partial<AssessmentItem>[] = [];
-
     for (let i = 0; i < securityItems.length; i++) {
       const item = securityItems[i];
       console.log(`Processing item ${i+1}/${securityItems.length}: ${item.name}`);
       
-      const query = `${modelName} ${vendor} ${item.name} ${item.criteria}`;
-      console.log(`Searching with query: ${query.substring(0, 100)}...`);
-      
-      const searchResults = await this.searchTavily(query);
-      console.log(`Tavily returned ${searchResults.length} results`);
-      
-      const uniqueResults = this.deduplicateResults(searchResults);
-      const topResults = uniqueResults.slice(0, 10);
-      console.log(`Using ${topResults.length} unique results for GPT analysis`);
+      // 関連する検索結果をフィルタリング（キーワードマッチング）
+      const relevantResults = this.filterRelevantResults(uniqueResults, item);
+      const topResults = relevantResults.slice(0, 10);
+      console.log(`Using ${topResults.length} relevant results for ${item.name}`);
       
       const assessment = await this.analyzeWithGPT(item, topResults, modelName);
       console.log(`GPT analysis completed for ${item.name}: ${assessment.judgement}`);
@@ -195,6 +201,31 @@ export class InvestigationService {
     }
 
     return assessmentItems;
+  }
+
+  private static filterRelevantResults(
+    results: TavilySearchResult[],
+    item: SecurityItem
+  ): TavilySearchResult[] {
+    const keywords = [
+      item.name.toLowerCase(),
+      ...item.criteria.toLowerCase().split(' '),
+      item.category.toLowerCase(),
+    ].filter(keyword => keyword.length > 3); // 短いキーワードは除外
+
+    return results.filter(result => {
+      const content = `${result.title} ${result.content}`.toLowerCase();
+      return keywords.some(keyword => content.includes(keyword));
+    }).sort((a, b) => {
+      // より多くのキーワードにマッチする結果を上位に
+      const aMatches = keywords.filter(keyword => 
+        `${a.title} ${a.content}`.toLowerCase().includes(keyword)
+      ).length;
+      const bMatches = keywords.filter(keyword => 
+        `${b.title} ${b.content}`.toLowerCase().includes(keyword)
+      ).length;
+      return bMatches - aMatches || b.score - a.score;
+    });
   }
 
   private static deduplicateResults(results: TavilySearchResult[]): TavilySearchResult[] {
