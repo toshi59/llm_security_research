@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { Filters, FilterGroup, FilterPills } from '@/components/ui/filters';
@@ -261,7 +261,7 @@ export default function AssessmentDetailsPage() {
       header: '判定',
       sortable: true,
       className: 'text-center w-[80px]',
-      render: (value, row) => {
+      render: (value, _row) => {
         const judgement = value as '○' | '×' | '要改善' | null;
         return (
           <div className="flex items-center justify-center">
@@ -275,7 +275,7 @@ export default function AssessmentDetailsPage() {
       header: 'リスク',
       sortable: true,
       className: 'min-w-[500px]',
-      render: (value, row) => {
+      render: (value, _row) => {
         const securityItem = securityItems.find(si => si.id === row.assessmentItem?.itemId);
         const riskColors = {
           low: 'bg-green-100 text-green-800',

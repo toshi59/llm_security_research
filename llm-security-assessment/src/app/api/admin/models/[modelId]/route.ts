@@ -3,13 +3,14 @@ import { RedisService } from '@/lib/redis';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { modelId: string } }
+  { params }: { params: Promise<{ modelId: string }> }
 ) {
   try {
-    console.log('Delete model API called for modelId:', params.modelId);
+    const { modelId } = await params;
+    console.log('Delete model API called for modelId:', modelId);
     
     // モデルIDの存在確認
-    const model = await RedisService.getModel(params.modelId);
+    const model = await RedisService.getModel(modelId);
     if (!model) {
       return NextResponse.json(
         { error: 'Model not found' },
@@ -19,7 +20,7 @@ export async function DELETE(
 
     // このモデルに関連するアセスメントを取得
     const assessments = await RedisService.getAllAssessments();
-    const modelAssessments = assessments.filter(assessment => assessment.modelId === params.modelId);
+    const modelAssessments = assessments.filter(assessment => assessment.modelId === modelId);
 
     console.log(`Found ${modelAssessments.length} assessments for model ${model.name}`);
 
@@ -36,14 +37,14 @@ export async function DELETE(
     }
 
     // モデルを削除
-    await RedisService.deleteModel(params.modelId);
+    await RedisService.deleteModel(modelId);
 
     // 監査ログを記録
     await RedisService.createAuditLog({
       user: 'admin',
       action: 'DELETE_MODEL',
       entityType: 'model',
-      entityId: params.modelId,
+      entityId: modelId,
       changes: {
         modelName: model.name,
         vendor: model.vendor,
