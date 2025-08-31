@@ -40,6 +40,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // 一時的に認証を無効化してテスト
-  matcher: [],
+  matcher: ['/api/admin/nonexistent'],
   // 元の設定: ['/api/admin/:path*']
 };
