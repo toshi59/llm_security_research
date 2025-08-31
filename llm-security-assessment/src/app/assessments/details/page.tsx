@@ -275,7 +275,7 @@ export default function AssessmentDetailsPage() {
       header: 'リスク',
       sortable: true,
       className: 'min-w-[500px]',
-      render: (value, _row) => {
+      render: (value, row) => {
         const securityItem = securityItems.find(si => si.id === row.assessmentItem?.itemId);
         const riskColors = {
           low: 'bg-green-100 text-green-800',
@@ -606,7 +606,7 @@ export default function AssessmentDetailsPage() {
                                   searchable={false}
                                   onRowClick={handleRowClick}
                                   emptyMessage="このカテゴリにはデータがありません"
-                                  rowClassName={(row) => 'cursor-pointer hover:bg-gray-50'}
+                                  rowClassName={(_row) => 'cursor-pointer hover:bg-gray-50'}
                                   className="border-0"
                                 />
                               </div>
