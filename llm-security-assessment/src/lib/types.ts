@@ -39,9 +39,12 @@ export interface AssessmentItem {
   assessmentId: string;
   itemId: string;
   judgement: '○' | '×' | '要改善' | null;
-  comment: string;
-  evidences: Evidence[];
+  comment?: string;
+  response?: string;
+  reason?: string;
+  evidences?: Evidence[];
   filledBy: string;
+  createdAt: string;
   updatedAt: string;
 }
 
