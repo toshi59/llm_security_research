@@ -26,7 +26,7 @@ async function migrateSecurityItems() {
   for (const key of oldKeys) {
     const item = await redis.get<SecurityItem>(key);
     if (item) {
-      await redis.hset('security_items', item.id, JSON.stringify(item));
+      await redis.hset('security_items', { [item.id]: JSON.stringify(item) });
       console.log(`✓ Migrated security item: ${item.name}`);
     }
   }
@@ -45,7 +45,7 @@ async function migrateModels() {
   for (const key of oldKeys) {
     const model = await redis.get<Model>(key);
     if (model) {
-      await redis.hset('models', model.id, JSON.stringify(model));
+      await redis.hset('models', { [model.id]: JSON.stringify(model) });
       console.log(`✓ Migrated model: ${model.name}`);
     }
   }
@@ -64,7 +64,7 @@ async function migrateAssessments() {
   for (const key of oldKeys) {
     const assessment = await redis.get<Assessment>(key);
     if (assessment) {
-      await redis.hset('assessments', assessment.id, JSON.stringify(assessment));
+      await redis.hset('assessments', { [assessment.id]: JSON.stringify(assessment) });
       
       // モデル別インデックスも作成
       await redis.sadd(`model_assessments:${assessment.modelId}`, assessment.id);
@@ -87,7 +87,7 @@ async function migrateAssessmentItems() {
   for (const key of oldKeys) {
     const item = await redis.get<AssessmentItem>(key);
     if (item) {
-      await redis.hset('assessment_items', item.id, JSON.stringify(item));
+      await redis.hset('assessment_items', { [item.id]: JSON.stringify(item) });
       
       // インデックスも作成
       await redis.sadd(`assessment_items_by_assessment:${item.assessmentId}`, item.id);
@@ -111,7 +111,7 @@ async function migrateAdminUsers() {
   for (const key of oldKeys) {
     const user = await redis.get<AdminUser>(key);
     if (user) {
-      await redis.hset('admin_users', user.username, JSON.stringify(user));
+      await redis.hset('admin_users', { [user.username]: JSON.stringify(user) });
       console.log(`✓ Migrated admin user: ${user.username}`);
     }
   }
@@ -130,7 +130,7 @@ async function migrateAuditLogs() {
   for (const key of oldKeys) {
     const log = await redis.get<AuditLog>(key);
     if (log) {
-      await redis.hset('audit_logs', log.id, JSON.stringify(log));
+      await redis.hset('audit_logs', { [log.id]: JSON.stringify(log) });
       
       // 時系列インデックス（ソートセット）も作成
       const timestamp = new Date(log.timestamp).getTime();
