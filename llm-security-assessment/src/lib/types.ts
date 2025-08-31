@@ -72,7 +72,7 @@ export interface InvestigationRequest {
 export interface AssessmentStep {
   id: string;
   name: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
+  status: 'pending' | 'running' | 'completed' | 'error' | 'in_progress';
   details?: string;
   timestamp?: string;
 }
@@ -89,4 +89,10 @@ export interface AssessmentProgressData {
   steps: AssessmentStep[];
   overallStatus: 'preparing' | 'running' | 'completed' | 'error';
   estimatedTimeRemaining?: number;
+  result?: {
+    assessmentId: string;
+    itemCount: number;
+    categorySummaries: { [category: string]: string };
+    overallAssessment: string;
+  };
 }

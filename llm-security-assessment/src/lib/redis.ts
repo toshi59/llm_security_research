@@ -283,7 +283,7 @@ export class RedisService {
   static async updateAssessmentStep(
     assessmentId: string, 
     stepId: string, 
-    status: 'pending' | 'running' | 'completed' | 'error',
+    status: 'pending' | 'running' | 'completed' | 'error' | 'in_progress',
     details?: string
   ): Promise<void> {
     const currentProgress = await this.getAssessmentProgress(assessmentId);

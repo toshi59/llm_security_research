@@ -12,19 +12,6 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Investigation API called');
     
-    // 一時的に認証チェックを無効化
-    /*
-    const token = request.cookies.get('auth-token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const payload = AuthService.verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-    */
-
     const body = await request.json();
     console.log('Request body:', body);
     
@@ -39,62 +26,30 @@ export async function POST(request: NextRequest) {
     });
     console.log('Model created:', model.id);
 
-    console.log('Getting security items...');
-    const securityItems = await RedisService.getAllSecurityItems();
-    console.log('Security items count:', securityItems.length);
-    
-    console.log('Starting investigation...');
-    const investigationResult = await InvestigationService.investigateModel(
-      modelName,
-      vendor,
-      securityItems
-    );
-    console.log('Investigation completed, items:', investigationResult.assessmentItems.length);
-
     console.log('Creating assessment...');
     const assessment = await RedisService.createAssessment({
       modelId: model.id,
       createdAt: new Date().toISOString(),
-      createdBy: 'admin', // payload.username,
-      status: 'draft',
-      summary: investigationResult.overallAssessment || `Automated assessment for ${modelName}`,
+      createdBy: 'admin',
+      status: 'in_progress',
+      summary: `${modelName}のアセスメントを実行中...`,
     });
     console.log('Assessment created:', assessment.id);
 
-    const createdItems = await Promise.all(
-      investigationResult.assessmentItems.map((item) =>
-        RedisService.createAssessmentItem({
-          assessmentId: assessment.id,
-          itemId: item.itemId!,
-          judgement: item.judgement || null,
-          comment: item.comment || '',
-          evidences: item.evidences || [],
-          filledBy: 'AI',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-      )
-    );
+    // バックグラウンドで調査を開始（非同期）
+    processInvestigationBackground(assessment.id, model, modelName, vendor)
+      .catch(error => {
+        console.error('Background investigation error:', error);
+      });
 
-    await RedisService.createAuditLog({
-      user: 'admin', // payload.username,
-      action: 'CREATE_ASSESSMENT',
-      entityType: 'assessment',
-      entityId: assessment.id,
-      changes: {
-        modelName,
-        vendor,
-        itemCount: createdItems.length,
-      },
-    });
-
+    // すぐにレスポンスを返す
     return NextResponse.json({
-      assessment,
+      success: true,
+      assessmentId: assessment.id,
       model,
-      items: createdItems,
-      categorySummaries: investigationResult.categorySummaries,
-      overallAssessment: investigationResult.overallAssessment,
+      message: 'アセスメントをバックグラウンドで開始しました',
     });
+
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -108,5 +63,137 @@ export async function POST(request: NextRequest) {
       { error: 'Investigation failed' },
       { status: 500 }
     );
+  }
+}
+
+// バックグラウンド処理関数
+async function processInvestigationBackground(
+  assessmentId: string,
+  model: { id: string; name: string; vendor: string; notes?: string },
+  modelName: string,
+  vendor: string
+) {
+  try {
+    console.log(`Starting background investigation for assessment ${assessmentId}`);
+
+    // 進捗状況を初期化
+    await RedisService.setAssessmentProgress(assessmentId, {
+      modelName: model.name,
+      totalItems: 0,
+      completedItems: 0,
+      steps: [
+        { id: 'init', name: '初期化', status: 'in_progress' },
+        { id: 'search', name: '情報検索', status: 'pending' },
+        { id: 'evaluate', name: 'AI評価', status: 'pending' },
+        { id: 'summary', name: 'サマリー生成', status: 'pending' },
+        { id: 'complete', name: '完了', status: 'pending' }
+      ],
+      overallStatus: 'running'
+    });
+
+    // セキュリティ項目を取得
+    console.log('Getting security items...');
+    await RedisService.updateAssessmentStep(assessmentId, 'init', 'completed', 'セキュリティ項目を取得しました');
+    
+    const securityItems = await RedisService.getAllSecurityItems();
+    console.log('Security items count:', securityItems.length);
+
+    // 進捗状況を更新
+    await RedisService.updateAssessmentStep(assessmentId, 'search', 'in_progress', '情報検索を開始しています...');
+    
+    // 実際の調査を実行
+    console.log('Starting investigation...');
+    const investigationResult = await InvestigationService.investigateModel(
+      modelName,
+      vendor,
+      securityItems
+    );
+    console.log('Investigation completed, items:', investigationResult.assessmentItems.length);
+
+    await RedisService.updateAssessmentStep(assessmentId, 'search', 'completed', '情報検索が完了しました');
+    await RedisService.updateAssessmentStep(assessmentId, 'evaluate', 'completed', 'AI評価が完了しました');
+    await RedisService.updateAssessmentStep(assessmentId, 'summary', 'in_progress', 'サマリーを生成中...');
+
+    // アセスメント結果を保存
+    const createdItems = await Promise.all(
+      investigationResult.assessmentItems.map((item) =>
+        RedisService.createAssessmentItem({
+          assessmentId: assessmentId,
+          itemId: item.itemId!,
+          judgement: item.judgement || null,
+          comment: item.comment || '',
+          evidences: item.evidences || [],
+          filledBy: 'AI',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+      )
+    );
+
+    // アセスメントを完了状態に更新
+    await RedisService.updateAssessment(assessmentId, {
+      status: 'completed',
+      summary: investigationResult.overallAssessment || `${modelName}のアセスメント完了`,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // 最終進捗状態を更新
+    await RedisService.updateAssessmentStep(assessmentId, 'summary', 'completed', 'サマリー生成完了');
+    await RedisService.updateAssessmentStep(assessmentId, 'complete', 'completed', 'アセスメント完了');
+
+    // 最終進捗データを更新
+    await RedisService.setAssessmentProgress(assessmentId, {
+      modelName: model.name,
+      totalItems: investigationResult.assessmentItems.length,
+      completedItems: investigationResult.assessmentItems.length,
+      steps: [
+        { id: 'init', name: '初期化', status: 'completed' },
+        { id: 'search', name: '情報検索', status: 'completed' },
+        { id: 'evaluate', name: 'AI評価', status: 'completed' },
+        { id: 'summary', name: 'サマリー生成', status: 'completed' },
+        { id: 'complete', name: '完了', status: 'completed' }
+      ],
+      overallStatus: 'completed',
+      result: {
+        assessmentId,
+        itemCount: createdItems.length,
+        categorySummaries: investigationResult.categorySummaries,
+        overallAssessment: investigationResult.overallAssessment,
+      }
+    });
+
+    await RedisService.createAuditLog({
+      user: 'admin',
+      action: 'CREATE_ASSESSMENT',
+      entityType: 'assessment',
+      entityId: assessmentId,
+      changes: {
+        modelName,
+        vendor,
+        itemCount: createdItems.length,
+      },
+    });
+
+    console.log(`Background investigation completed for assessment ${assessmentId}`);
+
+  } catch (error) {
+    console.error('Background investigation error:', error);
+    
+    // エラー状態を記録
+    await RedisService.updateAssessment(assessmentId, {
+      status: 'failed',
+      summary: 'アセスメント中にエラーが発生しました',
+      updatedAt: new Date().toISOString(),
+    });
+
+    await RedisService.setAssessmentProgress(assessmentId, {
+      modelName: model.name,
+      totalItems: 0,
+      completedItems: 0,
+      steps: [
+        { id: 'error', name: 'エラー', status: 'error' }
+      ],
+      overallStatus: 'error'
+    });
   }
 }

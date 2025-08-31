@@ -59,7 +59,18 @@ export default function AdminPage() {
       evidences: Array<{ url: string; title: string; snippet: string }>;
     }>;
   } | null>(null);
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   // const [recentAssessments, setRecentAssessments] = useState<never[]>([]);
+
+  // コンポーネントのクリーンアップ
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
   const [cleaning, setCleaning] = useState(false);
 
   useEffect(() => {
@@ -203,19 +214,10 @@ export default function AdminPage() {
       // ステップ1: 初期化
       updateProgressStep(0, 'active');
       setProgress('アセスメントを初期化しています...');
-      addLog('アセスメントを開始しました');
+      addLog('バックグラウンド処理でアセスメントを開始します');
       addLog(`対象モデル: ${modelName}${vendor ? ` (${vendor})` : ''}`);
       setProgressValue(5);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      updateProgressStep(0, 'completed');
-      addLog('初期化が完了しました');
 
-      // ステップ2: 情報収集開始
-      updateProgressStep(1, 'active');
-      setProgress('Tavilyで情報を収集中...');
-      addLog('7つの戦略的検索グループによる情報収集を開始します');
-      setProgressValue(15);
-      
       const response = await fetch('/api/admin/investigate', {
         method: 'POST',
         headers: {
@@ -225,47 +227,23 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        addLog('情報収集が完了しました');
-        updateProgressStep(1, 'completed');
-        
-        addLog('モデル情報を作成しています...');
-        updateProgressStep(2, 'completed');
-        
-        addLog('セキュリティ項目を取得しています...');
-        updateProgressStep(3, 'completed');
-        
-        addLog('AI による評価を実行しています...');
-        updateProgressStep(4, 'completed');
-        
-        addLog('アセスメント結果を保存しています...');
-        updateProgressStep(5, 'completed');
-        
-        setProgress('結果を処理中...');
-        setProgressValue(85);
-        
         const data = await response.json();
         
-        addLog(`評価完了: ${data.items?.length || 0}項目を評価しました`);
-        if (data.categorySummaries) {
-          addLog(`カテゴリ別サマリー: ${Object.keys(data.categorySummaries).length}カテゴリ`);
+        if (data.success && data.assessmentId) {
+          updateProgressStep(0, 'completed');
+          addLog('アセスメントが開始されました。バックグラウンドで処理中...');
+          addLog(`アセスメントID: ${data.assessmentId}`);
+          
+          setCurrentAssessmentId(data.assessmentId);
+          setProgress('バックグラウンドで処理中...');
+          setProgressValue(10);
+          
+          // ポーリング開始
+          startProgressPolling(data.assessmentId);
+        } else {
+          throw new Error('Invalid response format');
         }
-        if (data.overallAssessment) {
-          addLog('総合評価を生成しました');
-        }
-        
-        updateProgressStep(6, 'completed');
-        setResult(data);
-        setProgress('アセスメント完了！');
-        setProgressValue(100);
-        addLog('アセスメント処理が正常に完了しました');
-        
-        // モデル一覧を更新
-        await fetchModels();
       } else {
-        const currentActiveIndex = steps.findIndex(step => ['active', 'pending'].includes(step.status));
-        if (currentActiveIndex !== -1) {
-          updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
-        }
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
         setProgress(`アセスメント中にエラーが発生しました: ${response.status}`);
@@ -283,13 +261,104 @@ export default function AdminPage() {
       addLog(`予期しないエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
       alert(`エラー詳細: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setInvestigating(false);
+      if (!currentAssessmentId) {
+        setInvestigating(false);
+      }
+    }
+  };
+
+  // 進捗ポーリング関数
+  const startProgressPolling = (assessmentId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/assessments/${assessmentId}/progress`);
+        if (response.ok) {
+          const progressData = await response.json();
+          addLog(`進捗更新: ${progressData.overallStatus}`);
+          
+          // 進捗に応じてUIを更新
+          if (progressData.steps) {
+            progressData.steps.forEach((step: { status: string; name: string; details?: string }, index: number) => {
+              if (step.status === 'completed') {
+                updateProgressStep(index, 'completed');
+              } else if (step.status === 'in_progress') {
+                updateProgressStep(index, 'active');
+                addLog(`${step.name}: ${step.details || '処理中...'}`);
+              } else if (step.status === 'error') {
+                updateProgressStep(index, 'error', step.details);
+                addLog(`エラー: ${step.details}`);
+              }
+            });
+          }
+
+          // プログレスバーを更新
+          if (progressData.completedItems && progressData.totalItems) {
+            const progress = Math.round((progressData.completedItems / progressData.totalItems) * 80) + 10;
+            setProgressValue(progress);
+          }
+
+          // 完了またはエラーの場合
+          if (progressData.overallStatus === 'completed') {
+            addLog('✅ アセスメントが完了しました！');
+            setProgress('アセスメント完了！');
+            setProgressValue(100);
+            
+            // 結果を取得
+            if (progressData.result) {
+              fetchAssessmentResult(assessmentId);
+            }
+            
+            clearInterval(interval);
+            setPollingInterval(null);
+            setInvestigating(false);
+          } else if (progressData.overallStatus === 'error') {
+            addLog('❌ アセスメント中にエラーが発生しました');
+            setProgress('アセスメント失敗');
+            clearInterval(interval);
+            setPollingInterval(null);
+            setInvestigating(false);
+          }
+        }
+      } catch (error) {
+        console.error('Progress polling error:', error);
+        addLog(`進捗取得エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }, 2000); // 2秒間隔でポーリング
+
+    setPollingInterval(interval);
+  };
+
+  // アセスメント結果を取得
+  const fetchAssessmentResult = async (assessmentId: string) => {
+    try {
+      const response = await fetch(`/api/assessments/${assessmentId}`);
+      if (response.ok) {
+        const assessment = await response.json();
+        
+        // アセスメント項目を取得
+        const itemsResponse = await fetch(`/api/assessments/${assessmentId}/items`);
+        if (itemsResponse.ok) {
+          const items = await itemsResponse.json();
+          
+          setResult({
+            assessment,
+            model: { id: assessment.modelId, name: assessment.modelName || 'Unknown', vendor: '', notes: '' },
+            items: items || []
+          });
+          addLog(`結果取得完了: ${items?.length || 0}項目`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch result:', error);
+      addLog(`結果取得エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleViewAssessment = () => {
     if (result) {
       router.push(`/assessments/details?assessmentId=${result.assessment.id}`);
+    } else if (currentAssessmentId) {
+      router.push(`/assessments/details?assessmentId=${currentAssessmentId}`);
     }
   };
 
@@ -534,7 +603,14 @@ export default function AdminPage() {
                   <Button onClick={handleViewAssessment} className="flex-1">
                     評価結果を詳しく見る
                   </Button>
-                  <Button variant="outline" onClick={() => setResult(null)} className="flex-1">
+                  <Button variant="outline" onClick={() => {
+                    setResult(null);
+                    setCurrentAssessmentId(null);
+                    if (pollingInterval) {
+                      clearInterval(pollingInterval);
+                      setPollingInterval(null);
+                    }
+                  }} className="flex-1">
                     閉じる
                   </Button>
                 </div>

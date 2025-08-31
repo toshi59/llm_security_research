@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "src/app/api/admin/investigate/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/assessments/run-with-progress/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}
