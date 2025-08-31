@@ -87,12 +87,14 @@ async function processAssessmentWithProgress(
       const item = securityItems[i]
       
       // 現在の処理項目を更新
-      currentProgress.currentItem = {
-        id: item.id,
-        name: item.name,
-        category: item.category
+      if (currentProgress) {
+        currentProgress.currentItem = {
+          id: item.id,
+          name: item.name,
+          category: item.category
+        }
+        await RedisService.setAssessmentProgress(assessmentId, currentProgress)
       }
-      await RedisService.setAssessmentProgress(assessmentId, currentProgress)
 
       // ステップ1: 情報検索
       await RedisService.updateAssessmentStep(
