@@ -1,5 +1,13 @@
 import { SecurityItem, Evidence, AssessmentItem } from './types';
 
+interface SearchGroupInfo {
+  id: string;
+  name: string;
+  categories: string[];
+  keywords: string[];
+  searchQuery: string;
+}
+
 interface TavilySearchResult {
   url: string;
   title: string;
@@ -17,10 +25,62 @@ export class InvestigationService {
   private static TAVILY_API_KEY = process.env.TAVILY_API_KEY;
   private static OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+  // キーワード最適化による7つの戦略的検索グループ
+  private static SEARCH_GROUPS = [
+    {
+      id: 'legal_privacy',
+      name: 'Legal & Privacy Compliance',
+      categories: ['法規制・プライバシー'],
+      keywords: ['legal compliance', 'privacy protection', 'data protection', 'GDPR', 'regulation', 'personal data', 'consent management'],
+      searchQuery: 'legal compliance privacy protection data protection GDPR regulation personal data'
+    },
+    {
+      id: 'security_risk',
+      name: 'Security & Risk Management', 
+      categories: ['セキュリティ'],
+      keywords: ['security', 'vulnerability', 'encryption', 'access control', 'authentication', 'cyber security', 'data breach'],
+      searchQuery: 'security vulnerability encryption access control authentication cyber security data breach'
+    },
+    {
+      id: 'ai_ethics',
+      name: 'AI Ethics & Responsibility',
+      categories: ['AI倫理'],
+      keywords: ['AI ethics', 'bias', 'fairness', 'responsible AI', 'algorithmic fairness', 'ethical AI', 'discrimination'],
+      searchQuery: 'AI ethics bias fairness responsible AI algorithmic fairness ethical discrimination'
+    },
+    {
+      id: 'technical_quality',
+      name: 'Technical Performance & Quality',
+      categories: ['技術的健全性'],
+      keywords: ['performance', 'accuracy', 'reliability', 'scalability', 'quality assurance', 'technical validation', 'robustness'],
+      searchQuery: 'performance accuracy reliability scalability quality assurance technical validation robustness'
+    },
+    {
+      id: 'transparency_governance',
+      name: 'Transparency & Governance',
+      categories: ['透明性・説明責任', 'データガバナンス'],
+      keywords: ['transparency', 'explainability', 'accountability', 'data governance', 'audit trail', 'model interpretability'],
+      searchQuery: 'transparency explainability accountability data governance audit trail model interpretability'
+    },
+    {
+      id: 'business_operations',
+      name: 'Business & Operations',
+      categories: ['コスト・ROI', 'ベンダー管理', '統合・相互運用性'],
+      keywords: ['cost', 'ROI', 'vendor management', 'integration', 'interoperability', 'business value', 'operational efficiency'],
+      searchQuery: 'cost ROI vendor management integration interoperability business value operational'
+    },
+    {
+      id: 'sustainability',
+      name: 'Sustainability & Environmental Impact',
+      categories: ['持続可能性'],
+      keywords: ['sustainability', 'environmental impact', 'carbon footprint', 'green AI', 'energy efficiency'],
+      searchQuery: 'sustainability environmental impact carbon footprint green AI energy efficiency'
+    }
+  ];
+
   static async searchTavily(query: string): Promise<TavilySearchResult[]> {
     if (!this.TAVILY_API_KEY) {
       console.warn('Tavily API key not configured - using mock data');
-      // モックデータを返す
       return [
         {
           url: 'https://example.com/mock1',
@@ -29,7 +89,7 @@ export class InvestigationService {
           score: 0.95
         },
         {
-          url: 'https://example.com/mock2',
+          url: 'https://example.com/mock2', 
           title: `Security analysis for ${query}`,
           content: 'The model implements various security measures including data encryption and access controls.',
           score: 0.90
@@ -46,7 +106,7 @@ export class InvestigationService {
         body: JSON.stringify({
           api_key: this.TAVILY_API_KEY,
           query: query,
-          max_results: 500,
+          max_results: 100, // 1検索につき最大100サイト
           search_depth: 'advanced',
           include_domains: [],
           exclude_domains: [],
@@ -66,36 +126,43 @@ export class InvestigationService {
   }
 
   static async analyzeWithGPT(
-    item: SecurityItem,
+    items: SecurityItem[],
     searchResults: TavilySearchResult[],
-    modelName: string
-  ): Promise<GPTAssessment> {
-    // 検索結果が空の場合の処理
+    modelName: string,
+    groupInfo: SearchGroupInfo
+  ): Promise<{ [itemId: string]: GPTAssessment }> {
     if (!searchResults || searchResults.length === 0) {
-      console.warn(`No search results for ${item.name} - returning insufficient information assessment`);
-      return {
-        judgement: null,
-        comment: `No search results available to assess ${item.name}`,
-        evidences: [],
-      };
+      console.warn(`No search results for ${groupInfo.name} - returning insufficient information assessments`);
+      const result: { [itemId: string]: GPTAssessment } = {};
+      items.forEach(item => {
+        result[item.id] = {
+          judgement: null,
+          comment: `No search results available to assess ${item.name}`,
+          evidences: [],
+        };
+      });
+      return result;
     }
 
     if (!this.OPENAI_API_KEY) {
-      console.warn('OpenAI API key not configured - using mock assessment');
-      // モックアセスメントを返す
+      console.warn('OpenAI API key not configured - using mock assessments');
+      const result: { [itemId: string]: GPTAssessment } = {};
       const mockJudgements: Array<'○' | '×' | '要改善'> = ['○', '×', '要改善'];
-      const randomJudgement = mockJudgements[Math.floor(Math.random() * mockJudgements.length)];
       
-      return {
-        judgement: randomJudgement,
-        comment: `Mock assessment for ${item.name}`,
-        evidences: searchResults.slice(0, 2).map(r => ({
-          url: r.url,
-          title: r.title,
-          snippet: r.content.substring(0, 200),
-          confidence: 0.8 + Math.random() * 0.2
-        })),
-      };
+      items.forEach(item => {
+        const randomJudgement = mockJudgements[Math.floor(Math.random() * mockJudgements.length)];
+        result[item.id] = {
+          judgement: randomJudgement,
+          comment: `Mock assessment for ${item.name}`,
+          evidences: searchResults.slice(0, 2).map(r => ({
+            url: r.url,
+            title: r.title,
+            snippet: r.content.substring(0, 200),
+            confidence: 0.8 + Math.random() * 0.2
+          })),
+        };
+      });
+      return result;
     }
 
     // 検索結果を整形してプロンプトに含める
@@ -103,42 +170,51 @@ export class InvestigationService {
       `[Source ${index + 1}]\nTitle: ${r.title}\nURL: ${r.url}\nContent: ${r.content.substring(0, 800)}\nScore: ${r.score}\n`
     ).join('\n');
 
-    console.log(`Formatted ${searchResults.length} results for GPT analysis of ${item.name}`);
+    // 評価対象項目の詳細を整形
+    const itemsDetails = items.map(item => 
+      `ID: ${item.id}\nCategory: ${item.category}\nName: ${item.name}\nCriteria: ${item.criteria}\nStandards: ${item.standards}\nRisk: ${item.risk || 'Not specified'}\n`
+    ).join('\n---\n');
 
-    const prompt = `You are evaluating the LLM model "${modelName}" against the following security criteria:
-      
-Category: ${item.category}
-Name: ${item.name}
-Criteria: ${item.criteria}
-Standards: ${item.standards}
-Risk: ${item.risk || 'Not specified'}
+    console.log(`Analyzing ${items.length} items in ${groupInfo.name} group with ${searchResults.length} search results for ${modelName}`);
 
-Based on the following search results, assess whether the model meets this security criteria.
+    const prompt = `You are evaluating the LLM model "${modelName}" against multiple related security criteria in the "${groupInfo.name}" category group.
+
+ASSESSMENT ITEMS TO EVALUATE:
+${itemsDetails}
+
+Based on the following search results, assess each item individually:
 
 SEARCH RESULTS:
 ${formattedResults}
 
-Provide your assessment in JSON format:
+Provide assessments for ALL items in JSON format:
 {
-  "judgement": "○" | "×" | "要改善" | null,
-  "comment": "Brief assessment comment explaining your reasoning (max 200 characters)",
-  "evidences": [
-    {
-      "url": "source url",
-      "title": "source title", 
-      "snippet": "relevant excerpt (max 300 characters)",
-      "confidence": 0.0-1.0
-    }
-  ]
+  "item_id_1": {
+    "judgement": "○" | "×" | "要改善" | null,
+    "comment": "Brief assessment comment explaining your reasoning (max 200 characters)",
+    "evidences": [
+      {
+        "url": "source url",
+        "title": "source title", 
+        "snippet": "relevant excerpt (max 300 characters)",
+        "confidence": 0.0-1.0
+      }
+    ]
+  },
+  "item_id_2": {
+    // ... similar structure for each item
+  }
 }
 
 Guidelines:
+- Evaluate EACH item individually with its specific ID as the key
 - Use "○" for meets criteria completely
 - Use "×" for clearly does not meet criteria  
 - Use "要改善" for partially meets but needs improvement
 - Use null only if truly insufficient information
-- Include 2-3 most relevant evidences
-- Base assessment on factual information from search results`;
+- Include 2-3 most relevant evidences per item
+- Base assessment on factual information from search results
+- Ensure all ${items.length} items are included in the response`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -173,11 +249,128 @@ Guidelines:
       return JSON.parse(content);
     } catch (error) {
       console.error('GPT analysis error:', error);
-      return {
-        judgement: null,
-        comment: 'Analysis failed',
-        evidences: [],
-      };
+      const result: { [itemId: string]: GPTAssessment } = {};
+      items.forEach(item => {
+        result[item.id] = {
+          judgement: null,
+          comment: 'Analysis failed',
+          evidences: [],
+        };
+      });
+      return result;
+    }
+  }
+
+  static async generateCategorySummary(
+    categoryName: string,
+    assessmentItems: Partial<AssessmentItem>[],
+    modelName: string
+  ): Promise<string> {
+    if (!this.OPENAI_API_KEY) {
+      return `Mock summary for ${categoryName}: Overall assessment shows mixed results for ${modelName}.`;
+    }
+
+    const itemsText = assessmentItems.map(item => 
+      `- ${item.judgement || 'Not evaluated'}: ${item.comment}`
+    ).join('\n');
+
+    const prompt = `Generate a concise summary (max 300 characters) for the "${categoryName}" category assessment of the LLM model "${modelName}".
+
+Assessment results:
+${itemsText}
+
+Provide a brief summary highlighting key strengths, weaknesses, and overall status for this category.`;
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4-turbo-preview',
+          messages: [
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 150,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('Category summary error:', error);
+      return `Summary generation failed for ${categoryName}`;
+    }
+  }
+
+  static async generateOverallAssessment(
+    categorySummaries: { [category: string]: string },
+    allAssessmentItems: Partial<AssessmentItem>[],
+    modelName: string
+  ): Promise<string> {
+    if (!this.OPENAI_API_KEY) {
+      return `Mock overall assessment: ${modelName} shows varied performance across different security categories.`;
+    }
+
+    const summariesText = Object.entries(categorySummaries)
+      .map(([category, summary]) => `${category}: ${summary}`)
+      .join('\n');
+
+    const stats = {
+      total: allAssessmentItems.length,
+      positive: allAssessmentItems.filter(item => item.judgement === '○').length,
+      negative: allAssessmentItems.filter(item => item.judgement === '×').length,
+      improvement: allAssessmentItems.filter(item => item.judgement === '要改善').length,
+      noData: allAssessmentItems.filter(item => item.judgement === null).length,
+    };
+
+    const prompt = `Generate an overall security assessment summary (max 500 characters) for the LLM model "${modelName}".
+
+Category summaries:
+${summariesText}
+
+Statistics:
+- Total items assessed: ${stats.total}
+- Meets criteria (○): ${stats.positive}
+- Does not meet criteria (×): ${stats.negative}
+- Needs improvement (要改善): ${stats.improvement}
+- Insufficient data: ${stats.noData}
+
+Provide a comprehensive overall assessment highlighting the model's security posture, main strengths, key risks, and recommendations.`;
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4-turbo-preview',
+          messages: [
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 250,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('Overall assessment error:', error);
+      return `Overall assessment generation failed for ${modelName}`;
     }
   }
 
@@ -185,81 +378,109 @@ Guidelines:
     modelName: string,
     vendor: string,
     securityItems: SecurityItem[]
-  ): Promise<Partial<AssessmentItem>[]> {
-    console.log(`Investigating ${modelName} (${vendor}) - ${securityItems.length} items`);
+  ): Promise<{
+    assessmentItems: Partial<AssessmentItem>[],
+    categorySummaries: { [category: string]: string },
+    overallAssessment: string
+  }> {
+    console.log(`Starting optimized investigation for ${modelName} (${vendor}) - ${securityItems.length} items`);
     
-    // モデル全体に対して一度だけTavily検索を実行
-    const modelQuery = `${modelName} ${vendor} security vulnerability assessment compliance`;
-    console.log(`Searching with model query: ${modelQuery}`);
-    
-    const allSearchResults = await this.searchTavily(modelQuery);
-    console.log(`Tavily returned ${allSearchResults.length} results for ${modelName}`);
-    
-    const uniqueResults = this.deduplicateResults(allSearchResults);
-    console.log(`Using ${uniqueResults.length} unique results for analysis`);
-    
-    // 各セキュリティ項目に対してGPT分析を実行
-    const assessmentItems: Partial<AssessmentItem>[] = [];
-    for (let i = 0; i < securityItems.length; i++) {
-      const item = securityItems[i];
-      console.log(`Processing item ${i+1}/${securityItems.length}: ${item.name}`);
+    const allAssessmentItems: Partial<AssessmentItem>[] = [];
+    const categorySummaries: { [category: string]: string } = {};
+    let searchCount = 0;
+
+    // 戦略的な7回の検索を実行
+    for (const group of this.SEARCH_GROUPS) {
+      if (searchCount >= 7) break; // 最大7回の検索制限
+
+      console.log(`\n=== Search ${searchCount + 1}/7: ${group.name} ===`);
       
-      // 関連する検索結果をフィルタリング（キーワードマッチング）
-      const relevantResults = this.filterRelevantResults(uniqueResults, item);
-      console.log(`Found ${relevantResults.length} relevant results out of ${uniqueResults.length} for ${item.name}`);
+      // このグループに該当するセキュリティ項目を取得
+      const groupItems = securityItems.filter(item => 
+        group.categories.includes(item.category)
+      );
       
-      // 関連結果が少ない場合は、全体結果も含める
-      const topResults = relevantResults.length >= 5 ? relevantResults.slice(0, 10) : uniqueResults.slice(0, 8);
-      console.log(`Using ${topResults.length} search results for GPT analysis of ${item.name}`);
+      if (groupItems.length === 0) {
+        console.log(`No items found for group ${group.name}, skipping`);
+        continue;
+      }
+
+      console.log(`Processing ${groupItems.length} items in ${group.name}`);
       
-      const assessment = await this.analyzeWithGPT(item, topResults, modelName);
-      console.log(`GPT analysis completed for ${item.name}: ${assessment.judgement}`);
+      // モデル名 + グループ特化検索クエリで検索
+      const searchQuery = `${modelName} ${vendor} ${group.searchQuery}`;
+      console.log(`Search query: ${searchQuery}`);
       
-      assessmentItems.push({
-        itemId: item.id,
-        judgement: assessment.judgement,
-        comment: assessment.comment,
-        evidences: assessment.evidences,
-        filledBy: 'AI',
-        updatedAt: new Date().toISOString(),
-      });
+      const searchResults = await this.searchTavily(searchQuery);
+      console.log(`Found ${searchResults.length} search results for ${group.name}`);
+      
+      // 重複除去
+      const uniqueResults = this.deduplicateResults(searchResults);
+      console.log(`Using ${uniqueResults.length} unique results`);
+      
+      // グループ内の全項目を一度にGPTで分析
+      const groupAssessments = await this.analyzeWithGPT(
+        groupItems,
+        uniqueResults,
+        modelName,
+        group
+      );
+      
+      // 結果をassessmentItemsに変換
+      for (const item of groupItems) {
+        const assessment = groupAssessments[item.id];
+        if (assessment) {
+          allAssessmentItems.push({
+            itemId: item.id,
+            judgement: assessment.judgement,
+            comment: assessment.comment,
+            evidences: assessment.evidences,
+            filledBy: 'AI',
+            updatedAt: new Date().toISOString(),
+          });
+          console.log(`Assessment completed for ${item.name}: ${assessment.judgement}`);
+        }
+      }
+
+      searchCount++;
     }
 
-    return assessmentItems;
-  }
-
-  private static filterRelevantResults(
-    results: TavilySearchResult[],
-    item: SecurityItem
-  ): TavilySearchResult[] {
-    // より幅広いキーワードセットを生成
-    const keywords = [
-      ...item.name.toLowerCase().split(' ').filter(w => w.length > 2),
-      ...item.criteria.toLowerCase().split(' ').filter(w => w.length > 3),
-      ...item.category.toLowerCase().split(' ').filter(w => w.length > 2),
-      'security', 'privacy', 'safety', 'compliance', 'vulnerability', 'risk'
-    ].filter((keyword, index, self) => self.indexOf(keyword) === index); // 重複除去
-
-    console.log(`Using keywords for filtering ${item.name}:`, keywords.slice(0, 10));
-
-    return results.filter(result => {
-      const content = `${result.title} ${result.content}`.toLowerCase();
-      // より柔軟なマッチング: 複数キーワードのうち1つでもマッチすればOK
-      const hasMatch = keywords.some(keyword => content.includes(keyword));
-      if (hasMatch) {
-        console.log(`Matched result for ${item.name}: ${result.title}`);
+    console.log(`\n=== Generating Category Summaries ===`);
+    
+    // カテゴリーごとのサマリーを生成
+    const categories = [...new Set(securityItems.map(item => item.category))];
+    for (const category of categories) {
+      const categoryItems = allAssessmentItems.filter(item => {
+        const secItem = securityItems.find(si => si.id === item.itemId);
+        return secItem?.category === category;
+      });
+      
+      if (categoryItems.length > 0) {
+        categorySummaries[category] = await this.generateCategorySummary(
+          category,
+          categoryItems,
+          modelName
+        );
+        console.log(`Generated summary for ${category}`);
       }
-      return hasMatch;
-    }).sort((a, b) => {
-      // より多くのキーワードにマッチする結果を上位に
-      const aMatches = keywords.filter(keyword => 
-        `${a.title} ${a.content}`.toLowerCase().includes(keyword)
-      ).length;
-      const bMatches = keywords.filter(keyword => 
-        `${b.title} ${b.content}`.toLowerCase().includes(keyword)
-      ).length;
-      return bMatches - aMatches || b.score - a.score;
-    });
+    }
+
+    console.log(`\n=== Generating Overall Assessment ===`);
+    
+    // 総合評価を生成
+    const overallAssessment = await this.generateOverallAssessment(
+      categorySummaries,
+      allAssessmentItems,
+      modelName
+    );
+
+    console.log(`Investigation completed: ${allAssessmentItems.length} items assessed with ${searchCount} searches`);
+
+    return {
+      assessmentItems: allAssessmentItems,
+      categorySummaries,
+      overallAssessment
+    };
   }
 
   private static deduplicateResults(results: TavilySearchResult[]): TavilySearchResult[] {

@@ -44,12 +44,12 @@ export async function POST(request: NextRequest) {
     console.log('Security items count:', securityItems.length);
     
     console.log('Starting investigation...');
-    const assessmentItems = await InvestigationService.investigateModel(
+    const investigationResult = await InvestigationService.investigateModel(
       modelName,
       vendor,
       securityItems
     );
-    console.log('Investigation completed, items:', assessmentItems.length);
+    console.log('Investigation completed, items:', investigationResult.assessmentItems.length);
 
     console.log('Creating assessment...');
     const assessment = await RedisService.createAssessment({
@@ -57,12 +57,12 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       createdBy: 'admin', // payload.username,
       status: 'draft',
-      summary: `Automated assessment for ${modelName}`,
+      summary: investigationResult.overallAssessment || `Automated assessment for ${modelName}`,
     });
     console.log('Assessment created:', assessment.id);
 
     const createdItems = await Promise.all(
-      assessmentItems.map((item) =>
+      investigationResult.assessmentItems.map((item) =>
         RedisService.createAssessmentItem({
           assessmentId: assessment.id,
           itemId: item.itemId!,
@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
       assessment,
       model,
       items: createdItems,
+      categorySummaries: investigationResult.categorySummaries,
+      overallAssessment: investigationResult.overallAssessment,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
