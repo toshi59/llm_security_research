@@ -69,8 +69,8 @@ export default function Home() {
                 <div className="p-3 bg-purple-100 rounded-lg mx-auto mb-3 w-fit">
                   <Settings className="h-8 w-8 text-purple-600" />
                 </div>
-                <CardTitle className="text-lg">AIモデルアセスメント</CardTitle>
-                <CardDescription>新しいモデルの評価を実行</CardDescription>
+                <CardTitle className="text-lg">モデル/サービスアセスメント</CardTitle>
+                <CardDescription>新しいモデル・サービスの評価を実行</CardDescription>
               </CardHeader>
               <CardContent className="text-center">
                 <Link href="/admin">

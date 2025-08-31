@@ -43,7 +43,7 @@ const bottomNavItems: NavItem[] = [
     icon: <Filter className="h-4 w-4" />
   },
   {
-    label: '生成AIモデルアセスメント',
+    label: 'モデル/サービスアセスメント',
     href: '/admin',
     icon: <Settings className="h-4 w-4" />
   }

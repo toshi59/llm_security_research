@@ -198,11 +198,11 @@ export default function AdminPage() {
 
   return (
     <PageLayout
-      title="生成AIモデルアセスメント"
-      description="生成AIモデルのセキュリティアセスメント実施・管理"
+      title="モデル/サービスアセスメント"
+      description="AIモデル・サービスのセキュリティアセスメント実施・管理"
       breadcrumbs={[
         { label: 'ホーム', href: '/', icon: <Home className="h-3 w-3" /> },
-        { label: '生成AIモデルアセスメント' }
+        { label: 'モデル/サービスアセスメント' }
       ]}
     >
       <div className="space-y-6">
@@ -226,27 +226,27 @@ export default function AdminPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>生成AIモデルアセスメント</CardTitle>
+            <CardTitle>モデル/サービスアセスメント</CardTitle>
             <CardDescription>
-              生成AIモデル名を入力して、包括的なセキュリティアセスメントを自動実行します
+              AIモデル・サービス名を入力して、包括的なセキュリティアセスメントを自動実行します
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">生成AIモデル名 *</label>
+                  <label className="block text-sm font-medium mb-2">モデル・サービス名 *</label>
                   <Input
-                    placeholder="例: GPT-5, Claude-3.5, Gemini-2.0"
+                    placeholder="例: GPT-5, Claude-3.5, Gemini-2.0, ChatGPT Plus"
                     value={modelName}
                     onChange={(e) => setModelName(e.target.value)}
                     disabled={investigating}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">開発会社・ベンダー</label>
+                  <label className="block text-sm font-medium mb-2">開発会社・プロバイダー</label>
                   <Input
-                    placeholder="例: OpenAI, Anthropic, Google"
+                    placeholder="例: OpenAI, Anthropic, Google, Microsoft"
                     value={vendor}
                     onChange={(e) => setVendor(e.target.value)}
                     disabled={investigating}
