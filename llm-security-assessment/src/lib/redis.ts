@@ -34,7 +34,7 @@ export class RedisService {
   static async createSecurityItem(item: Omit<SecurityItem, 'id'>): Promise<SecurityItem> {
     const id = ulid();
     const newItem = { ...item, id };
-    await redis.hset('security_items', id, JSON.stringify(newItem));
+    await redis.hset('security_items', { [id]: JSON.stringify(newItem) });
     return newItem;
   }
 
@@ -43,7 +43,7 @@ export class RedisService {
     if (!existing) return null;
     
     const updated = { ...existing, ...item, id };
-    await redis.hset('security_items', id, JSON.stringify(updated));
+    await redis.hset('security_items', { [id]: JSON.stringify(updated) });
     return updated;
   }
 
@@ -70,7 +70,7 @@ export class RedisService {
   static async createModel(model: Omit<Model, 'id'>): Promise<Model> {
     const id = ulid();
     const newModel = { ...model, id };
-    await redis.hset('models', id, JSON.stringify(newModel));
+    await redis.hset('models', { [id]: JSON.stringify(newModel) });
     return newModel;
   }
 
@@ -79,7 +79,7 @@ export class RedisService {
     if (!existing) return null;
     
     const updated = { ...existing, ...model, id };
-    await redis.hset('models', id, JSON.stringify(updated));
+    await redis.hset('models', { [id]: JSON.stringify(updated) });
     return updated;
   }
 
@@ -107,7 +107,7 @@ export class RedisService {
   static async createAssessment(assessment: Omit<Assessment, 'id'>): Promise<Assessment> {
     const id = ulid();
     const newAssessment = { ...assessment, id };
-    await redis.hset('assessments', id, JSON.stringify(newAssessment));
+    await redis.hset('assessments', { [id]: JSON.stringify(newAssessment) });
     
     // モデルIDでのインデックスも作成（効率的な検索のため）
     await redis.sadd(`model_assessments:${assessment.modelId}`, id);
@@ -120,7 +120,7 @@ export class RedisService {
     if (!existing) return null;
     
     const updated = { ...existing, ...assessment, id };
-    await redis.hset('assessments', id, JSON.stringify(updated));
+    await redis.hset('assessments', { [id]: JSON.stringify(updated) });
     return updated;
   }
 
@@ -170,7 +170,7 @@ export class RedisService {
   static async createAssessmentItem(item: Omit<AssessmentItem, 'id'>): Promise<AssessmentItem> {
     const id = ulid();
     const newItem = { ...item, id };
-    await redis.hset('assessment_items', id, JSON.stringify(newItem));
+    await redis.hset('assessment_items', { [id]: JSON.stringify(newItem) });
     
     // インデックスを作成
     await redis.sadd(`assessment_items_by_assessment:${item.assessmentId}`, id);
@@ -184,7 +184,7 @@ export class RedisService {
     if (!existing) return null;
     
     const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() };
-    await redis.hset('assessment_items', id, JSON.stringify(updated));
+    await redis.hset('assessment_items', { [id]: JSON.stringify(updated) });
     return updated;
   }
 
@@ -209,7 +209,7 @@ export class RedisService {
   }
 
   static async createAdminUser(user: AdminUser): Promise<void> {
-    await redis.hset('admin_users', user.username, JSON.stringify(user));
+    await redis.hset('admin_users', { [user.username]: JSON.stringify(user) });
   }
 
   static async getAllAdminUsers(): Promise<AdminUser[]> {
@@ -237,7 +237,7 @@ export class RedisService {
     };
     
     // ハッシュに保存
-    await redis.hset('audit_logs', id, JSON.stringify(newLog));
+    await redis.hset('audit_logs', { [id]: JSON.stringify(newLog) });
     
     // 時系列検索用のソートセット（スコアはタイムスタンプ）
     await redis.zadd('audit_logs_timeline', Date.now(), id);
