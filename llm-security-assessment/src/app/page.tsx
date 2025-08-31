@@ -223,32 +223,6 @@ export default function Home() {
                   </tbody>
                 </table>
               </div>
-                          </td>
-                          <td className="p-4 text-sm text-gray-500 max-w-xs">
-                            <div className="line-clamp-2" title={item.standards}>
-                              {item.standards}
-                            </div>
-                          </td>
-                          <td className="p-4 text-sm text-gray-600 max-w-xs">
-                            <div className="line-clamp-2" title={item.risk}>
-                              {item.risk}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
             )}
           </CardContent>
         </Card>
