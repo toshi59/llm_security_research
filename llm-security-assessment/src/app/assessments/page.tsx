@@ -79,10 +79,10 @@ export default function AssessmentsPage() {
         ).length;
         
         // アセスメント項目の適合率を計算
-        const totalItems = latestAssessments.reduce((sum, assessment) => 
+        const totalItems = latestAssessments.reduce((sum: number, assessment: Assessment) => 
           sum + assessment.items.length, 0
         );
-        const compliantItems = latestAssessments.reduce((sum, assessment) => 
+        const compliantItems = latestAssessments.reduce((sum: number, assessment: Assessment) => 
           sum + assessment.items.filter((item) => item.judgement === '○').length, 0
         );
         const averageScore = totalItems > 0 ? Math.round((compliantItems / totalItems) * 100) : 0;
