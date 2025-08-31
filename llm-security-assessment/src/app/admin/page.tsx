@@ -145,7 +145,10 @@ export default function AdminPage() {
         if (currentActiveIndex !== -1) {
           updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
         }
-        setProgress('アセスメント中にエラーが発生しました');
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        setProgress(`アセスメント中にエラーが発生しました: ${response.status}`);
+        alert(`エラー詳細: ${errorText || response.statusText}`);
       }
     } catch (error) {
       console.error('Investigation error:', error);
@@ -154,6 +157,7 @@ export default function AdminPage() {
         updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
       }
       setProgress('アセスメント中にエラーが発生しました');
+      alert(`エラー詳細: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setInvestigating(false);
     }
