@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Shield, ChevronDown, ChevronRight } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -14,11 +14,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: '🏠 ホーム',
+    label: 'ホーム',
     href: '/'
   },
   {
-    label: '📊 アセスメント結果',
+    label: 'アセスメント結果',
     href: '/assessments',
     children: [
       {
@@ -32,14 +32,14 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    label: '⚙️ 生成AIモデルアセスメント',
+    label: '生成AIモデルアセスメント',
     href: '/admin'
   }
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [expandedItems, setExpandedItems] = React.useState<string[]>(['📊 アセスメント結果'])
+  const [expandedItems, setExpandedItems] = React.useState<string[]>(['アセスメント結果'])
 
   const toggleExpanded = (label: string) => {
     setExpandedItems(prev =>
@@ -61,7 +61,7 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-56 bg-white border-r border-gray-200 z-40">
       {/* ヘッダー部分 */}
       <div className="flex items-center gap-2 px-4 py-4">
-        <Shield className="h-5 w-5 text-blue-600" />
+        <BarChart3 className="h-5 w-5 text-blue-600" />
         <span className="font-semibold text-gray-900">
           LLM評価システム
         </span>
