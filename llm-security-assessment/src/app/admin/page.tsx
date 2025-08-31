@@ -45,6 +45,8 @@ export default function AdminPage() {
     status: 'pending' | 'active' | 'completed' | 'error';
     message: string;
   }[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [showLogWindow, setShowLogWindow] = useState(false);
   const [result, setResult] = useState<{
     assessment: { id: string; modelId: string; createdAt: string; createdBy: string; status: string; summary: string };
     model: { id: string; name: string; vendor: string; notes: string };
@@ -137,6 +139,12 @@ export default function AdminPage() {
     ));
   };
 
+  // ログ追加関数
+  const addLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString('ja-JP');
+    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+  };
+
   const initializeProgressSteps = () => {
     const steps = [
       { step: '初期化', status: 'pending' as const, message: 'アセスメントを初期化しています...' },
@@ -185,6 +193,8 @@ export default function AdminPage() {
     setInvestigating(true);
     setResult(null);
     setProgressValue(0);
+    setLogs([]);
+    setShowLogWindow(true);
 
     // 進捗ステップを初期化
     const steps = initializeProgressSteps();
@@ -193,13 +203,17 @@ export default function AdminPage() {
       // ステップ1: 初期化
       updateProgressStep(0, 'active');
       setProgress('アセスメントを初期化しています...');
+      addLog('アセスメントを開始しました');
+      addLog(`対象モデル: ${modelName}${vendor ? ` (${vendor})` : ''}`);
       setProgressValue(5);
       await new Promise(resolve => setTimeout(resolve, 500));
       updateProgressStep(0, 'completed');
+      addLog('初期化が完了しました');
 
       // ステップ2: 情報収集開始
       updateProgressStep(1, 'active');
       setProgress('Tavilyで情報を収集中...');
+      addLog('7つの戦略的検索グループによる情報収集を開始します');
       setProgressValue(15);
       
       const response = await fetch('/api/admin/investigate', {
@@ -211,10 +225,19 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
+        addLog('情報収集が完了しました');
         updateProgressStep(1, 'completed');
+        
+        addLog('モデル情報を作成しています...');
         updateProgressStep(2, 'completed');
+        
+        addLog('セキュリティ項目を取得しています...');
         updateProgressStep(3, 'completed');
+        
+        addLog('AI による評価を実行しています...');
         updateProgressStep(4, 'completed');
+        
+        addLog('アセスメント結果を保存しています...');
         updateProgressStep(5, 'completed');
         
         setProgress('結果を処理中...');
@@ -222,10 +245,19 @@ export default function AdminPage() {
         
         const data = await response.json();
         
+        addLog(`評価完了: ${data.items?.length || 0}項目を評価しました`);
+        if (data.categorySummaries) {
+          addLog(`カテゴリ別サマリー: ${Object.keys(data.categorySummaries).length}カテゴリ`);
+        }
+        if (data.overallAssessment) {
+          addLog('総合評価を生成しました');
+        }
+        
         updateProgressStep(6, 'completed');
         setResult(data);
         setProgress('アセスメント完了！');
         setProgressValue(100);
+        addLog('アセスメント処理が正常に完了しました');
         
         // モデル一覧を更新
         await fetchModels();
@@ -237,6 +269,8 @@ export default function AdminPage() {
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
         setProgress(`アセスメント中にエラーが発生しました: ${response.status}`);
+        addLog(`APIエラー: ${response.status} - ${response.statusText}`);
+        addLog(`エラー詳細: ${errorText}`);
         alert(`エラー詳細: ${errorText || response.statusText}`);
       }
     } catch (error) {
@@ -246,42 +280,16 @@ export default function AdminPage() {
         updateProgressStep(currentActiveIndex, 'error', 'エラーが発生しました');
       }
       setProgress('アセスメント中にエラーが発生しました');
+      addLog(`予期しないエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
       alert(`エラー詳細: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setInvestigating(false);
     }
   };
 
-  const handleSaveAssessment = async () => {
-    if (!result) return;
-
-    try {
-      const response = await fetch('/api/admin/assessments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          modelId: result.model.id,
-          summary: result.assessment.summary,
-          items: result.items.map((item) => ({
-            itemId: item.itemId,
-            judgement: item.judgement,
-            comment: item.comment,
-            evidences: item.evidences,
-          })),
-        }),
-      });
-
-      if (response.ok) {
-        alert('評価を保存しました');
-        router.push('/assessments');
-      } else {
-        alert('保存中にエラーが発生しました');
-      }
-    } catch (error) {
-      console.error('Save error:', error);
-      alert('保存中にエラーが発生しました');
+  const handleViewAssessment = () => {
+    if (result) {
+      router.push(`/assessments/details?assessmentId=${result.assessment.id}`);
     }
   };
 
@@ -367,10 +375,40 @@ export default function AdminPage() {
                   <div className="w-full">
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-gray-600">進捗状況</span>
-                      <span className="font-medium">{progressValue}%</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{progressValue}%</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowLogWindow(!showLogWindow)}
+                        >
+                          {showLogWindow ? 'ログを隠す' : 'ログを表示'}
+                        </Button>
+                      </div>
                     </div>
                     <Progress value={progressValue} className="w-full h-3" />
                   </div>
+
+                  {/* ログウィンドウ */}
+                  {showLogWindow && (
+                    <Card className="bg-gray-900 text-green-400 font-mono text-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-green-300">評価ログ</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="max-h-48 overflow-y-auto space-y-1">
+                          {logs.map((log, index) => (
+                            <div key={index} className="whitespace-pre-wrap">
+                              {log}
+                            </div>
+                          ))}
+                          {logs.length === 0 && (
+                            <div className="text-gray-500">ログはまだありません</div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* 詳細ステップ */}
                   <div className="space-y-2">
@@ -493,11 +531,11 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button onClick={handleSaveAssessment} className="flex-1">
-                    評価を登録
+                  <Button onClick={handleViewAssessment} className="flex-1">
+                    評価結果を詳しく見る
                   </Button>
                   <Button variant="outline" onClick={() => setResult(null)} className="flex-1">
-                    キャンセル
+                    閉じる
                   </Button>
                 </div>
               </div>

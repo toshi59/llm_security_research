@@ -177,44 +177,46 @@ export class InvestigationService {
 
     console.log(`Analyzing ${items.length} items in ${groupInfo.name} group with ${searchResults.length} search results for ${modelName}`);
 
-    const prompt = `You are evaluating the LLM model "${modelName}" against multiple related security criteria in the "${groupInfo.name}" category group.
+    const prompt = `あなたは"${modelName}"というLLMモデルを、"${groupInfo.name}"カテゴリグループ内の関連するセキュリティ基準に対して評価しています。
 
-ASSESSMENT ITEMS TO EVALUATE:
+評価対象項目:
 ${itemsDetails}
 
-Based on the following search results, assess each item individually:
+以下の検索結果に基づいて、各項目を個別に評価してください:
 
-SEARCH RESULTS:
+検索結果:
 ${formattedResults}
 
-Provide assessments for ALL items in JSON format:
+すべての項目について、以下のJSON形式で評価を提供してください:
 {
   "item_id_1": {
     "judgement": "○" | "×" | "要改善" | null,
-    "comment": "Brief assessment comment explaining your reasoning (max 200 characters)",
+    "comment": "評価理由を簡潔に説明してください（最大200文字）",
     "evidences": [
       {
-        "url": "source url",
-        "title": "source title", 
-        "snippet": "relevant excerpt (max 300 characters)",
+        "url": "情報源のURL",
+        "title": "情報源のタイトル", 
+        "snippet": "関連する抜粋（最大300文字）",
         "confidence": 0.0-1.0
       }
     ]
   },
   "item_id_2": {
-    // ... similar structure for each item
+    // ... 他の項目も同様の構造
   }
 }
 
-Guidelines:
-- Evaluate EACH item individually with its specific ID as the key
-- Use "○" for meets criteria completely
-- Use "×" for clearly does not meet criteria  
-- Use "要改善" for partially meets but needs improvement
-- Use null only if truly insufficient information
-- Include 2-3 most relevant evidences per item
-- Base assessment on factual information from search results
-- Ensure all ${items.length} items are included in the response`;
+評価ガイドライン:
+- 各項目を個別に評価し、具体的なIDをキーとして使用してください
+- "○"：基準を完全に満たしている
+- "×"：基準を明らかに満たしていない  
+- "要改善"：部分的に満たしているが改善が必要
+- null：情報が本当に不十分な場合のみ使用
+- 項目ごとに2-3個の最も関連性の高いエビデンスを含めてください
+- 検索結果の事実情報に基づいて評価してください
+- ${items.length}個すべての項目がレスポンスに含まれていることを確認してください
+
+コメントは日本語で記述し、具体的な評価理由を簡潔に説明してください。`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -228,7 +230,7 @@ Guidelines:
           messages: [
             {
               role: 'system',
-              content: 'You are a security assessment expert. Provide assessments in JSON format only.',
+              content: 'あなたはセキュリティ評価の専門家です。JSON形式でのみ評価結果を提供してください。コメントは日本語で記述してください。',
             },
             {
               role: 'user',
@@ -267,19 +269,19 @@ Guidelines:
     modelName: string
   ): Promise<string> {
     if (!this.OPENAI_API_KEY) {
-      return `Mock summary for ${categoryName}: Overall assessment shows mixed results for ${modelName}.`;
+      return `${categoryName}のモック評価: ${modelName}は総合的に混合した結果を示しています。`;
     }
 
     const itemsText = assessmentItems.map(item => 
-      `- ${item.judgement || 'Not evaluated'}: ${item.comment}`
+      `- ${item.judgement || '未評価'}: ${item.comment}`
     ).join('\n');
 
-    const prompt = `Generate a concise summary (max 300 characters) for the "${categoryName}" category assessment of the LLM model "${modelName}".
+    const prompt = `LLMモデル「${modelName}」の「${categoryName}」カテゴリ評価について、簡潔なサマリー（最大300文字）を生成してください。
 
-Assessment results:
+評価結果:
 ${itemsText}
 
-Provide a brief summary highlighting key strengths, weaknesses, and overall status for this category.`;
+このカテゴリの主な強み、弱み、全体的な状況を強調した簡潔なサマリーを日本語で提供してください。`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -306,7 +308,7 @@ Provide a brief summary highlighting key strengths, weaknesses, and overall stat
       return data.choices[0].message.content;
     } catch (error) {
       console.error('Category summary error:', error);
-      return `Summary generation failed for ${categoryName}`;
+      return `${categoryName}のサマリー生成に失敗しました`;
     }
   }
 
@@ -316,7 +318,7 @@ Provide a brief summary highlighting key strengths, weaknesses, and overall stat
     modelName: string
   ): Promise<string> {
     if (!this.OPENAI_API_KEY) {
-      return `Mock overall assessment: ${modelName} shows varied performance across different security categories.`;
+      return `${modelName}のモック総合評価: 様々なセキュリティカテゴリで異なる性能を示しています。`;
     }
 
     const summariesText = Object.entries(categorySummaries)
@@ -331,19 +333,19 @@ Provide a brief summary highlighting key strengths, weaknesses, and overall stat
       noData: allAssessmentItems.filter(item => item.judgement === null).length,
     };
 
-    const prompt = `Generate an overall security assessment summary (max 500 characters) for the LLM model "${modelName}".
+    const prompt = `LLMモデル「${modelName}」の総合セキュリティ評価サマリー（最大500文字）を生成してください。
 
-Category summaries:
+カテゴリ別サマリー:
 ${summariesText}
 
-Statistics:
-- Total items assessed: ${stats.total}
-- Meets criteria (○): ${stats.positive}
-- Does not meet criteria (×): ${stats.negative}
-- Needs improvement (要改善): ${stats.improvement}
-- Insufficient data: ${stats.noData}
+統計:
+- 評価項目総数: ${stats.total}
+- 基準を満たす (○): ${stats.positive}
+- 基準を満たさない (×): ${stats.negative}
+- 改善が必要 (要改善): ${stats.improvement}
+- データ不足: ${stats.noData}
 
-Provide a comprehensive overall assessment highlighting the model's security posture, main strengths, key risks, and recommendations.`;
+このモデルのセキュリティ体制、主な強み、主要なリスク、推奨事項を強調した包括的な総合評価を日本語で提供してください。`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -370,7 +372,7 @@ Provide a comprehensive overall assessment highlighting the model's security pos
       return data.choices[0].message.content;
     } catch (error) {
       console.error('Overall assessment error:', error);
-      return `Overall assessment generation failed for ${modelName}`;
+      return `${modelName}の総合評価生成に失敗しました`;
     }
   }
 
@@ -384,6 +386,7 @@ Provide a comprehensive overall assessment highlighting the model's security pos
     overallAssessment: string
   }> {
     console.log(`Starting optimized investigation for ${modelName} (${vendor}) - ${securityItems.length} items`);
+    console.log('🔍 キーワード最適化による7段階検索システムを開始します');
     
     const allAssessmentItems: Partial<AssessmentItem>[] = [];
     const categorySummaries: { [category: string]: string } = {};
@@ -401,24 +404,25 @@ Provide a comprehensive overall assessment highlighting the model's security pos
       );
       
       if (groupItems.length === 0) {
-        console.log(`No items found for group ${group.name}, skipping`);
+        console.log(`⚠️ グループ「${group.name}」に該当する項目がありません。スキップします。`);
         continue;
       }
 
-      console.log(`Processing ${groupItems.length} items in ${group.name}`);
+      console.log(`📋 「${group.name}」グループで${groupItems.length}項目を処理中`);
       
       // モデル名 + グループ特化検索クエリで検索
       const searchQuery = `${modelName} ${vendor} ${group.searchQuery}`;
-      console.log(`Search query: ${searchQuery}`);
+      console.log(`🔍 検索クエリ: ${searchQuery}`);
       
       const searchResults = await this.searchTavily(searchQuery);
-      console.log(`Found ${searchResults.length} search results for ${group.name}`);
+      console.log(`📊 「${group.name}」で${searchResults.length}件の検索結果を取得`);
       
       // 重複除去
       const uniqueResults = this.deduplicateResults(searchResults);
-      console.log(`Using ${uniqueResults.length} unique results`);
+      console.log(`✨ 重複除去後: ${uniqueResults.length}件のユニーク結果を使用`);
       
       // グループ内の全項目を一度にGPTで分析
+      console.log(`🤖 GPT-4による「${group.name}」グループの評価を開始`);
       const groupAssessments = await this.analyzeWithGPT(
         groupItems,
         uniqueResults,
@@ -427,6 +431,7 @@ Provide a comprehensive overall assessment highlighting the model's security pos
       );
       
       // 結果をassessmentItemsに変換
+      let processedCount = 0;
       for (const item of groupItems) {
         const assessment = groupAssessments[item.id];
         if (assessment) {
@@ -438,14 +443,17 @@ Provide a comprehensive overall assessment highlighting the model's security pos
             filledBy: 'AI',
             updatedAt: new Date().toISOString(),
           });
-          console.log(`Assessment completed for ${item.name}: ${assessment.judgement}`);
+          processedCount++;
+          console.log(`✅ ${item.name}: ${assessment.judgement || '評価不可'} - ${assessment.comment?.substring(0, 50) || ''}...`);
         }
       }
-
+      
+      console.log(`📋 「${group.name}」グループ完了: ${processedCount}/${groupItems.length}項目を評価`);
       searchCount++;
     }
 
-    console.log(`\n=== Generating Category Summaries ===`);
+    console.log(`
+=== 📊 カテゴリ別サマリー生成開始 ===`);
     
     // カテゴリーごとのサマリーを生成
     const categories = [...new Set(securityItems.map(item => item.category))];
@@ -456,25 +464,30 @@ Provide a comprehensive overall assessment highlighting the model's security pos
       });
       
       if (categoryItems.length > 0) {
+        console.log(`📋 「${category}」カテゴリのサマリーを生成中... (${categoryItems.length}項目)`);
         categorySummaries[category] = await this.generateCategorySummary(
           category,
           categoryItems,
           modelName
         );
-        console.log(`Generated summary for ${category}`);
+        console.log(`✅ 「${category}」サマリー完了`);
       }
     }
 
-    console.log(`\n=== Generating Overall Assessment ===`);
+    console.log(`
+=== 🎯 総合評価生成開始 ===`);
     
     // 総合評価を生成
+    console.log(`📊 全${allAssessmentItems.length}項目の総合評価を生成中...`);
     const overallAssessment = await this.generateOverallAssessment(
       categorySummaries,
       allAssessmentItems,
       modelName
     );
+    console.log(`✅ 総合評価生成完了`);
 
-    console.log(`Investigation completed: ${allAssessmentItems.length} items assessed with ${searchCount} searches`);
+    console.log(`
+🎉 アセスメント完了: ${allAssessmentItems.length}項目を${searchCount}回の検索で評価`);
 
     return {
       assessmentItems: allAssessmentItems,
