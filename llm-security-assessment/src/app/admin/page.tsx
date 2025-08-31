@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,17 @@ import { Progress } from '@/components/ui/progress';
 import { Search, LogOut, Loader2, CheckCircle, XCircle, Home } from 'lucide-react';
 import { PageLayout } from '@/components/layout/page-layout';
 
+interface SecurityItem {
+  id: string;
+  category: string;
+  name: string;
+  criteria: string;
+  standards: string;
+  evidence_examples: string;
+  risk: string;
+  order: number;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [modelName, setModelName] = useState('');
@@ -17,6 +28,7 @@ export default function AdminPage() {
   const [investigating, setInvestigating] = useState(false);
   const [progress, setProgress] = useState('');
   const [progressValue, setProgressValue] = useState(0);
+  const [securityItems, setSecurityItems] = useState<SecurityItem[]>([]);
   const [progressSteps, setProgressSteps] = useState<{
     step: string;
     status: 'pending' | 'active' | 'completed' | 'error';
@@ -37,9 +49,30 @@ export default function AdminPage() {
   // const [recentAssessments, setRecentAssessments] = useState<never[]>([]);
   const [cleaning, setCleaning] = useState(false);
 
+  useEffect(() => {
+    fetchSecurityItems();
+  }, []);
+
+  const fetchSecurityItems = async () => {
+    try {
+      const response = await fetch('/api/security-items');
+      if (response.ok) {
+        const items = await response.json();
+        setSecurityItems(items);
+      }
+    } catch (error) {
+      console.error('Error fetching security items:', error);
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/logout', { method: 'POST' });
     router.push('/login');
+  };
+
+  // セキュリティ項目の詳細を取得するヘルパー関数
+  const getSecurityItem = (itemId: string): SecurityItem | null => {
+    return securityItems.find(item => item.id === itemId) || null;
   };
 
   // 進捗ステップを管理するヘルパー関数
@@ -374,19 +407,31 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {result.items.slice(0, 10).map((item, index: number) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">項目 {index + 1}</td>
-                          <td className="p-2 text-center">
-                            {item.judgement === '○' && <Badge variant="success">○</Badge>}
-                            {item.judgement === '×' && <Badge variant="destructive">×</Badge>}
-                            {item.judgement === '要改善' && <Badge variant="warning">要改善</Badge>}
-                            {!item.judgement && <Badge variant="outline">-</Badge>}
-                          </td>
-                          <td className="p-2 text-sm text-muted-foreground">{item.comment || '-'}</td>
-                          <td className="p-2 text-center">{item.evidences?.length || 0}</td>
-                        </tr>
-                      ))}
+                      {result.items.slice(0, 10).map((item, index: number) => {
+                        const securityItem = getSecurityItem(item.itemId);
+                        return (
+                          <tr key={index} className="border-b">
+                            <td className="p-2">
+                              <div className="font-medium text-sm">
+                                {securityItem ? securityItem.name : `項目 ${index + 1}`}
+                              </div>
+                              {securityItem && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {securityItem.category}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-2 text-center">
+                              {item.judgement === '○' && <Badge variant="success">○</Badge>}
+                              {item.judgement === '×' && <Badge variant="destructive">×</Badge>}
+                              {item.judgement === '要改善' && <Badge variant="warning">要改善</Badge>}
+                              {!item.judgement && <Badge variant="outline">-</Badge>}
+                            </td>
+                            <td className="p-2 text-sm text-muted-foreground">{item.comment || '-'}</td>
+                            <td className="p-2 text-center">{item.evidences?.length || 0}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
