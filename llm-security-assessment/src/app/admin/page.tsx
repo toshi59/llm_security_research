@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Search, LogOut, Loader2, CheckCircle, XCircle, Home } from 'lucide-react';
+import { Search, LogOut, Loader2, CheckCircle, XCircle, Home, Trash2 } from 'lucide-react';
 import { PageLayout } from '@/components/layout/page-layout';
 
 interface SecurityItem {
@@ -21,6 +21,15 @@ interface SecurityItem {
   order: number;
 }
 
+interface ModelWithCount {
+  id: string;
+  name: string;
+  vendor: string;
+  notes: string;
+  assessmentCount: number;
+  lastAssessmentDate: string | null;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [modelName, setModelName] = useState('');
@@ -29,6 +38,8 @@ export default function AdminPage() {
   const [progress, setProgress] = useState('');
   const [progressValue, setProgressValue] = useState(0);
   const [securityItems, setSecurityItems] = useState<SecurityItem[]>([]);
+  const [models, setModels] = useState<ModelWithCount[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
   const [progressSteps, setProgressSteps] = useState<{
     step: string;
     status: 'pending' | 'active' | 'completed' | 'error';
@@ -51,6 +62,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchSecurityItems();
+    fetchModels();
   }, []);
 
   const fetchSecurityItems = async () => {
@@ -65,6 +77,21 @@ export default function AdminPage() {
     }
   };
 
+  const fetchModels = async () => {
+    setLoadingModels(true);
+    try {
+      const response = await fetch('/api/admin/models');
+      if (response.ok) {
+        const models = await response.json();
+        setModels(models);
+      }
+    } catch (error) {
+      console.error('Error fetching models:', error);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/logout', { method: 'POST' });
     router.push('/login');
@@ -73,6 +100,32 @@ export default function AdminPage() {
   // セキュリティ項目の詳細を取得するヘルパー関数
   const getSecurityItem = (itemId: string): SecurityItem | null => {
     return securityItems.find(item => item.id === itemId) || null;
+  };
+
+  // モデル削除機能
+  const handleDeleteModel = async (modelId: string, modelName: string) => {
+    if (!confirm(`モデル「${modelName}」とその全ての評価結果を削除しますか？この操作は元に戻せません。`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/models/${modelId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        // モデル一覧を再取得
+        await fetchModels();
+      } else {
+        const error = await response.json();
+        alert(`削除に失敗しました: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Delete model error:', error);
+      alert('削除中にエラーが発生しました');
+    }
   };
 
   // 進捗ステップを管理するヘルパー関数
@@ -173,6 +226,9 @@ export default function AdminPage() {
         setResult(data);
         setProgress('アセスメント完了！');
         setProgressValue(100);
+        
+        // モデル一覧を更新
+        await fetchModels();
       } else {
         const currentActiveIndex = steps.findIndex(step => ['active', 'pending'].includes(step.status));
         if (currentActiveIndex !== -1) {
@@ -448,6 +504,68 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* モデル管理セクション */}
+        <Card>
+          <CardHeader>
+            <CardTitle>登録済みモデル管理</CardTitle>
+            <CardDescription>
+              評価済みのモデル一覧と削除機能
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingModels ? (
+              <div className="text-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                <div className="text-sm text-gray-500">モデル一覧を読み込み中...</div>
+              </div>
+            ) : models.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                登録されているモデルがありません
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {models.map((model) => (
+                  <div key={model.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {model.name}
+                            {model.vendor && (
+                              <span className="text-sm text-gray-500 ml-2">({model.vendor})</span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {model.assessmentCount > 0 ? (
+                              <>
+                                評価件数: {model.assessmentCount}件 • 
+                                最終評価: {model.lastAssessmentDate ? new Date(model.lastAssessmentDate).toLocaleDateString('ja-JP') : '不明'}
+                              </>
+                            ) : (
+                              '評価結果なし'
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteModel(model.id, model.name)}
+                        className="flex items-center gap-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        削除
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </PageLayout>
   );
