@@ -55,7 +55,7 @@ export class RedisService {
   // ===== モデル管理 =====
   static async getModel(id: string): Promise<Model | null> {
     const model = await redis.hget('models', id);
-    return model ? (typeof model === 'string' ? JSON.parse(model) : model) : null;
+    return model ? (typeof model === 'string' ? JSON.parse(model) : model) as Model : null;
   }
 
   static async getAllModels(): Promise<Model[]> {
@@ -91,7 +91,7 @@ export class RedisService {
   // ===== アセスメント管理 =====
   static async getAssessment(id: string): Promise<Assessment | null> {
     const assessment = await redis.hget('assessments', id);
-    return assessment ? (typeof assessment === 'string' ? JSON.parse(assessment) : assessment) : null;
+    return assessment ? (typeof assessment === 'string' ? JSON.parse(assessment) : assessment) as Assessment : null;
   }
 
   static async getAllAssessments(): Promise<Assessment[]> {
@@ -153,7 +153,7 @@ export class RedisService {
   // ===== アセスメントアイテム管理 =====
   static async getAssessmentItem(id: string): Promise<AssessmentItem | null> {
     const item = await redis.hget('assessment_items', id);
-    return item ? (typeof item === 'string' ? JSON.parse(item) : item) : null;
+    return item ? (typeof item === 'string' ? JSON.parse(item) : item) as AssessmentItem : null;
   }
 
   static async getAssessmentItems(assessmentId: string): Promise<AssessmentItem[]> {
@@ -205,7 +205,7 @@ export class RedisService {
   // ===== 管理者ユーザー管理 =====
   static async getAdminUser(username: string): Promise<AdminUser | null> {
     const user = await redis.hget('admin_users', username);
-    return user ? (typeof user === 'string' ? JSON.parse(user) : user) : null;
+    return user ? (typeof user === 'string' ? JSON.parse(user) : user) as AdminUser : null;
   }
 
   static async createAdminUser(user: AdminUser): Promise<void> {
@@ -259,7 +259,7 @@ export class RedisService {
 
   static async getAuditLog(id: string): Promise<AuditLog | null> {
     const log = await redis.hget('audit_logs', id);
-    return log ? (typeof log === 'string' ? JSON.parse(log) : log) : null;
+    return log ? (typeof log === 'string' ? JSON.parse(log) : log) as AuditLog : null;
   }
 }
 

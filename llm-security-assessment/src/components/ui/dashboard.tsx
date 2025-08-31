@@ -177,7 +177,7 @@ export function Dashboard({ stats, className }: DashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.categoryStats.map((category, _index) => (
+              {stats.categoryStats.map((category) => (
                 <div key={category.category} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium truncate">{category.category}</span>

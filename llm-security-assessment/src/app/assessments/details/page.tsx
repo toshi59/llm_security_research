@@ -261,7 +261,7 @@ export default function AssessmentDetailsPage() {
       header: '判定',
       sortable: true,
       className: 'text-center w-[80px]',
-      render: (value, _row) => {
+      render: (value) => {
         const judgement = value as '○' | '×' | '要改善' | null;
         return (
           <div className="flex items-center justify-center">
@@ -344,7 +344,7 @@ export default function AssessmentDetailsPage() {
 
   // アクティブフィルターのピル表示用データ
   const activeFilters = Object.entries(filterValues)
-    .filter(([_key, value]) => {
+    .filter(([, value]) => {
       if (Array.isArray(value)) return value.length > 0;
       return value;
     })
@@ -372,7 +372,7 @@ export default function AssessmentDetailsPage() {
   };
 
   // モデル別サマリ生成関数
-  const generateSummaryForModel = (modelName: string, modelData: typeof filteredData, _assessment: Assessment) => {
+  const generateSummaryForModel = (modelName: string, modelData: typeof filteredData) => {
     const totalItems = modelData.length;
     const compliantItems = modelData.filter(item => item.judgement === '○').length;
     const nonCompliantItems = modelData.filter(item => item.judgement === '×').length;
@@ -566,7 +566,7 @@ export default function AssessmentDetailsPage() {
                                  WebkitLineClamp: 4,
                                  WebkitBoxOrient: 'vertical' as const
                                }}>
-                              {modelAssessment.summary || generateSummaryForModel(modelName, modelData, modelAssessment)}
+                              {modelAssessment.summary || generateSummaryForModel(modelName, modelData)}
                             </p>
                           </div>
                         )}
@@ -606,7 +606,7 @@ export default function AssessmentDetailsPage() {
                                   searchable={false}
                                   onRowClick={handleRowClick}
                                   emptyMessage="このカテゴリにはデータがありません"
-                                  rowClassName={(_row) => 'cursor-pointer hover:bg-gray-50'}
+                                  rowClassName={() => 'cursor-pointer hover:bg-gray-50'}
                                   className="border-0"
                                 />
                               </div>

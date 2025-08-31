@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app:*)",
+      "Bash(npm install:*)",
+      "Bash(copy .env.example .env)",
+      "Bash(npm run dev:*)",
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:localllm-evaluater.vercel.app)",
+      "WebFetch(domain:openai.com)",
+      "Bash(uv:*)",
+      "Bash(\"C:\\Users\\toshi\\.local\\bin\\uv\" --version)",
+      "Bash(claude mcp:*)",
+      "Bash(\"C:\\Users\\toshi\\.local\\bin\\uvx\" --from git+https://github.com/oraios/serena serena-mcp-server --help)",
+      "Bash(\"C:\\Users\\toshi\\.local\\bin\\uvx\" --from git+https://github.com/oraios/serena serena-mcp-server --project . --transport stdio)",
+      "Bash(tree:*)",
+      "Bash(git add:*)",
+      "Bash(npx next dev:*)",
+      "Bash(git push:*)",
+      "Bash(npm run build:webpack:*)",
+      "Bash(git commit:*)",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__activate_project",
+      "mcp__serena__list_dir",
+      "mcp__serena__read_file",
+      "mcp__serena__find_file",
+      "mcp__serena__replace_regex",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__create_text_file",
+      "mcp__serena__insert_before_symbol",
+      "Bash(git reset:*)",
+      "WebFetch(domain:vercel.com)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
