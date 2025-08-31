@@ -138,7 +138,7 @@ export class RedisService {
   }
 
   static async getAssessmentsByModelId(modelId: string): Promise<Assessment[]> {
-    const assessmentIds = await redis.smembers(`model_assessments:${modelId}`);
+    const assessmentIds = await redis.smembers(`model_assessments:${modelId}`) as string[];
     if (assessmentIds.length === 0) return [];
     
     const assessments = await Promise.all(
@@ -157,7 +157,7 @@ export class RedisService {
   }
 
   static async getAssessmentItems(assessmentId: string): Promise<AssessmentItem[]> {
-    const itemIds = await redis.smembers(`assessment_items_by_assessment:${assessmentId}`);
+    const itemIds = await redis.smembers(`assessment_items_by_assessment:${assessmentId}`) as string[];
     if (itemIds.length === 0) return [];
     
     const items = await Promise.all(
@@ -247,7 +247,7 @@ export class RedisService {
 
   static async getAuditLogs(limit = 100, offset = 0): Promise<AuditLog[]> {
     // 最新の監査ログIDを取得（逆順）
-    const logIds = await redis.zrange('audit_logs_timeline', offset, offset + limit - 1, { rev: true });
+    const logIds = await redis.zrange('audit_logs_timeline', offset, offset + limit - 1, { rev: true }) as string[];
     if (logIds.length === 0) return [];
     
     const logs = await Promise.all(
