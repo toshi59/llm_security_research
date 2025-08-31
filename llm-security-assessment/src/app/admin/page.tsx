@@ -34,7 +34,7 @@ export default function AdminPage() {
       evidences: Array<{ url: string; title: string; snippet: string }>;
     }>;
   } | null>(null);
-  const [recentAssessments, setRecentAssessments] = useState<never[]>([]);
+  // const [recentAssessments, setRecentAssessments] = useState<never[]>([]);
   const [cleaning, setCleaning] = useState(false);
 
   const handleLogout = async () => {

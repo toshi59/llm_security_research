@@ -14,6 +14,12 @@ interface Model {
   notes?: string;
 }
 
+interface AssessmentItem {
+  id: string;
+  judgement: '○' | '×' | '要改善' | null;
+  comment: string;
+}
+
 interface Assessment {
   id: string;
   modelId: string;
@@ -22,7 +28,7 @@ interface Assessment {
   status: 'draft' | 'submitted';
   summary: string;
   model: Model;
-  items: any[];
+  items: AssessmentItem[];
 }
 
 export default function AssessmentsPage() {
@@ -77,7 +83,7 @@ export default function AssessmentsPage() {
           sum + assessment.items.length, 0
         );
         const compliantItems = latestAssessments.reduce((sum, assessment) => 
-          sum + assessment.items.filter((item: any) => item.judgement === '○').length, 0
+          sum + assessment.items.filter((item) => item.judgement === '○').length, 0
         );
         const averageScore = totalItems > 0 ? Math.round((compliantItems / totalItems) * 100) : 0;
         
@@ -236,7 +242,7 @@ export default function AssessmentsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium text-green-600">
-                        {Math.round((assessment.items.filter((item: any) => item.judgement === '○').length / assessment.items.length) * 100)}%
+                        {Math.round((assessment.items.filter((item) => item.judgement === '○').length / assessment.items.length) * 100)}%
                       </div>
                       <div className="text-xs text-gray-400">適合率</div>
                     </div>
