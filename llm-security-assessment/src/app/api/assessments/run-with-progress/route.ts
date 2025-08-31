@@ -202,10 +202,10 @@ async function processAssessmentWithProgress(
     console.error('Assessment processing error:', error)
     
     // エラー状態を記録
-    let currentProgress = await RedisService.getAssessmentProgress(assessmentId)
-    if (currentProgress) {
-      currentProgress.overallStatus = 'error'
-      await RedisService.setAssessmentProgress(assessmentId, currentProgress)
+    const errorProgress = await RedisService.getAssessmentProgress(assessmentId)
+    if (errorProgress) {
+      errorProgress.overallStatus = 'error'
+      await RedisService.setAssessmentProgress(assessmentId, errorProgress)
     }
 
     await RedisService.updateAssessment(assessmentId, {
