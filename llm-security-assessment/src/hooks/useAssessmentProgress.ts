@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { AssessmentProgressData } from '@/components/assessment-progress'
+import type { AssessmentProgressData } from '@/lib/types'
 
 export function useAssessmentProgress(assessmentId: string | null) {
   const [progressData, setProgressData] = useState<AssessmentProgressData | null>(null)

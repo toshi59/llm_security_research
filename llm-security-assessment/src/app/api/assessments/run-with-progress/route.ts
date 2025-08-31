@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { RedisService } from '@/lib/redis'
-import type { AssessmentProgressData } from '@/components/assessment-progress'
+import type { AssessmentProgressData, Model, SecurityItem } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,14 +68,16 @@ export async function POST(request: NextRequest) {
 // バックグラウンドでアセスメントを処理する関数
 async function processAssessmentWithProgress(
   assessmentId: string,
-  model: any,
-  securityItems: any[]
+  model: Model,
+  securityItems: SecurityItem[]
 ) {
   try {
     // 全体ステータスを実行中に更新
     let currentProgress = await RedisService.getAssessmentProgress(assessmentId)
-    currentProgress.overallStatus = 'running'
-    await RedisService.setAssessmentProgress(assessmentId, currentProgress)
+    if (currentProgress) {
+      currentProgress.overallStatus = 'running'
+      await RedisService.setAssessmentProgress(assessmentId, currentProgress)
+    }
 
     let completedItems = 0
 
@@ -161,11 +163,13 @@ async function processAssessmentWithProgress(
       // 完了項目数を更新
       completedItems++
       currentProgress = await RedisService.getAssessmentProgress(assessmentId)
-      currentProgress.completedItems = completedItems
-      currentProgress.currentItem = undefined
+      if (currentProgress) {
+        currentProgress.completedItems = completedItems
+        currentProgress.currentItem = undefined
+      }
       
       // 全ステップを次の項目用にリセット
-      if (i < securityItems.length - 1) {
+      if (i < securityItems.length - 1 && currentProgress) {
         currentProgress.steps = currentProgress.steps.map(step => ({
           ...step,
           status: 'pending' as const,
@@ -174,7 +178,9 @@ async function processAssessmentWithProgress(
         }))
       }
       
-      await RedisService.setAssessmentProgress(assessmentId, currentProgress)
+      if (currentProgress) {
+        await RedisService.setAssessmentProgress(assessmentId, currentProgress)
+      }
     }
 
     // アセスメント完了
@@ -184,8 +190,11 @@ async function processAssessmentWithProgress(
     })
 
     // 最終進捗状態を更新
-    currentProgress.overallStatus = 'completed'
-    await RedisService.setAssessmentProgress(assessmentId, currentProgress)
+    const finalProgress = await RedisService.getAssessmentProgress(assessmentId)
+    if (finalProgress) {
+      finalProgress.overallStatus = 'completed'
+      await RedisService.setAssessmentProgress(assessmentId, finalProgress)
+    }
 
     console.log(`Assessment ${assessmentId} completed successfully`)
 

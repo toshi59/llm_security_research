@@ -62,3 +62,26 @@ export interface InvestigationRequest {
   modelName: string;
   vendor?: string;
 }
+
+// アセスメント進捗関連の型定義
+export interface AssessmentStep {
+  id: string;
+  name: string;
+  status: 'pending' | 'running' | 'completed' | 'error';
+  details?: string;
+  timestamp?: string;
+}
+
+export interface AssessmentProgressData {
+  modelName: string;
+  totalItems: number;
+  completedItems: number;
+  currentItem?: {
+    id: string;
+    name: string;
+    category: string;
+  };
+  steps: AssessmentStep[];
+  overallStatus: 'preparing' | 'running' | 'completed' | 'error';
+  estimatedTimeRemaining?: number;
+}

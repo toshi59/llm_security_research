@@ -4,29 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, AlertCircle, Loader2, Search, Brain, ClipboardCheck } from 'lucide-react'
-
-export interface AssessmentStep {
-  id: string
-  name: string
-  status: 'pending' | 'running' | 'completed' | 'error'
-  details?: string
-  timestamp?: string
-}
-
-export interface AssessmentProgressData {
-  modelName: string
-  totalItems: number
-  completedItems: number
-  currentItem?: {
-    id: string
-    name: string
-    category: string
-  }
-  steps: AssessmentStep[]
-  overallStatus: 'preparing' | 'running' | 'completed' | 'error'
-  estimatedTimeRemaining?: number
-}
+import { CheckCircle, Clock, AlertCircle, Loader2, Brain } from 'lucide-react'
+import type { AssessmentStep, AssessmentProgressData } from '@/lib/types'
 
 interface AssessmentProgressProps {
   data: AssessmentProgressData

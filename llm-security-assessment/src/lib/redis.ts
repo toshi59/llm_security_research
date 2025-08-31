@@ -6,7 +6,8 @@ import type {
   Assessment, 
   AssessmentItem, 
   AdminUser, 
-  AuditLog 
+  AuditLog,
+  AssessmentProgressData 
 } from '@/lib/types';
 
 const redis = new Redis({
@@ -263,16 +264,16 @@ export class RedisService {
   }
 
   // ===== アセスメント進捗管理 =====
-  static async setAssessmentProgress(assessmentId: string, progressData: any): Promise<void> {
+  static async setAssessmentProgress(assessmentId: string, progressData: AssessmentProgressData): Promise<void> {
     await redis.hset('assessment_progress', { [assessmentId]: JSON.stringify(progressData) });
     
     // TTL設定（24時間後に自動削除）
     await redis.expire(`assessment_progress:${assessmentId}`, 24 * 60 * 60);
   }
 
-  static async getAssessmentProgress(assessmentId: string): Promise<any | null> {
+  static async getAssessmentProgress(assessmentId: string): Promise<AssessmentProgressData | null> {
     const progress = await redis.hget('assessment_progress', assessmentId);
-    return progress ? (typeof progress === 'string' ? JSON.parse(progress) : progress) : null;
+    return progress ? (typeof progress === 'string' ? JSON.parse(progress) : progress) as AssessmentProgressData : null;
   }
 
   static async deleteAssessmentProgress(assessmentId: string): Promise<void> {
@@ -287,7 +288,7 @@ export class RedisService {
   ): Promise<void> {
     const currentProgress = await this.getAssessmentProgress(assessmentId);
     if (currentProgress) {
-      const stepIndex = currentProgress.steps.findIndex((step: any) => step.id === stepId);
+      const stepIndex = currentProgress.steps.findIndex(step => step.id === stepId);
       if (stepIndex !== -1) {
         currentProgress.steps[stepIndex] = {
           ...currentProgress.steps[stepIndex],
