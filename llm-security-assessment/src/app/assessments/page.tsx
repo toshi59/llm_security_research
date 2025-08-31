@@ -74,7 +74,7 @@ export default function AssessmentsPage() {
         
         // 統計情報を計算
         const today = new Date().toDateString();
-        const completedToday = latestAssessments.filter(a => 
+        const completedToday = latestAssessments.filter((a: Assessment) => 
           new Date(a.createdAt).toDateString() === today
         ).length;
         

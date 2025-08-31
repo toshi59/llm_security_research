@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { RedisService } from '@/lib/redis';
 import { seedDatabase } from '@/lib/seed';
 
