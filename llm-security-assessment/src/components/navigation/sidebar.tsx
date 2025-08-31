@@ -3,37 +3,43 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, ChevronDown, ChevronRight } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronRight, Home, Filter, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
   label: string
   href: string
+  icon?: React.ReactNode
   children?: NavItem[]
 }
 
 const navItems: NavItem[] = [
   {
     label: 'ホーム',
-    href: '/'
+    href: '/',
+    icon: <Home className="h-4 w-4" />
   },
   {
     label: 'アセスメント結果',
     href: '/assessments',
+    icon: <BarChart3 className="h-4 w-4" />,
     children: [
       {
         label: 'ダッシュボード',
-        href: '/assessments/dashboard'
+        href: '/assessments/dashboard',
+        icon: <BarChart3 className="h-4 w-4" />
       },
       {
         label: '詳細結果',
-        href: '/assessments/details'
+        href: '/assessments/details',
+        icon: <Filter className="h-4 w-4" />
       }
     ]
   },
   {
     label: '生成AIモデルアセスメント',
-    href: '/admin'
+    href: '/admin',
+    icon: <Settings className="h-4 w-4" />
   }
 ]
 
@@ -87,7 +93,10 @@ export function Sidebar() {
                           : 'text-gray-700 hover:bg-gray-100'
                       )}
                     >
-                      <span>{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </div>
                       {isExpanded ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
@@ -109,7 +118,10 @@ export function Sidebar() {
                                   : 'text-gray-600 hover:bg-gray-100'
                               )}
                             >
-                              {child.label}
+                              <div className="flex items-center gap-2">
+                                {child.icon}
+                                <span>{child.label}</span>
+                              </div>
                             </Link>
                           )
                         })}
@@ -126,7 +138,10 @@ export function Sidebar() {
                         : 'text-gray-700 hover:bg-gray-100'
                     )}
                   >
-                    {item.label}
+                    <div className="flex items-center gap-2">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </div>
                   </Link>
                 )}
               </div>
