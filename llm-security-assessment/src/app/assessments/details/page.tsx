@@ -501,46 +501,15 @@ export default function AssessmentDetailsPage() {
 
         <div className="space-y-6">
           {/* フィルターエリア */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-3">
-              <Filters
-                groups={filterGroups}
-                values={filterValues}
-                onChange={handleFilterChange}
-                onClear={handleFilterClear}
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-              />
-            </div>
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">評価モデル数</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {models.length}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    アセスメント済み
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">表示中の件数</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {filteredData.length}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    / {tableData.length} 件
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <div>
+            <Filters
+              groups={filterGroups}
+              values={filterValues}
+              onChange={handleFilterChange}
+              onClear={handleFilterClear}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
           </div>
 
           {/* アクティブフィルターピル */}
