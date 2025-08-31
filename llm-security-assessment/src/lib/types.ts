@@ -19,10 +19,12 @@ export interface Model {
 export interface Assessment {
   id: string;
   modelId: string;
+  modelName?: string;
   createdAt: string;
-  createdBy: string;
-  status: 'draft' | 'submitted';
-  summary: string;
+  createdBy?: string;
+  status: 'draft' | 'submitted' | 'in_progress' | 'completed' | 'failed';
+  summary?: string;
+  updatedAt?: string;
 }
 
 export interface Evidence {

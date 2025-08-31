@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
       status: 'in_progress',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      createdBy: 'system',
+      summary: `${model.name}のセキュリティアセスメント実行中`,
     })
 
     // 初期進捗データを設定
