@@ -226,7 +226,7 @@ ${formattedResults}
           'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-5-nano',
           messages: [
             {
               role: 'system',
@@ -291,7 +291,7 @@ ${itemsText}
           'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-5-nano',
           messages: [
             { role: 'user', content: prompt }
           ],
@@ -355,7 +355,7 @@ ${summariesText}
           'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-5-nano',
           messages: [
             { role: 'user', content: prompt }
           ],
