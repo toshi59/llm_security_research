@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "migrate:redis": "npx tsx src/scripts/migrate-to-hash.ts",
-    "migrate:redis:cleanup": "npx tsx src/scripts/migrate-to-hash.ts --cleanup"
+    "migrate:redis:cleanup": "npx tsx src/scripts/migrate-to-hash.ts --cleanup",
+    "cleanup:item-indexes": "npx tsx src/scripts/cleanup-item-indexes.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

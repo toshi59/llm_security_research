@@ -173,9 +173,8 @@ export class RedisService {
     const newItem = { ...item, id };
     await redis.hset('assessment_items', { [id]: JSON.stringify(newItem) });
     
-    // インデックスを作成
+    // アセスメントIDによるインデックスのみ作成（itemIdによるインデックスは不要）
     await redis.sadd(`assessment_items_by_assessment:${item.assessmentId}`, id);
-    await redis.sadd(`assessment_items_by_item:${item.itemId}`, id);
     
     return newItem;
   }
@@ -196,9 +195,8 @@ export class RedisService {
     // メインハッシュから削除
     const result = await redis.hdel('assessment_items', id);
     
-    // インデックスからも削除
+    // インデックスからも削除（itemIdによるインデックスは不要）
     await redis.srem(`assessment_items_by_assessment:${item.assessmentId}`, id);
-    await redis.srem(`assessment_items_by_item:${item.itemId}`, id);
     
     return result === 1;
   }
